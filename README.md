@@ -47,7 +47,7 @@ La plataforma permite la administración de citas médicas en tiempo real con l�
 ## Instalación y Configuración
 
 1. Clonar el repositorio:
-   git clone https://github.com/TU_USUARIO/MediCita.git
+   git clone https://github.com/Yax-CalleCas/Sistema-Clinica-Web-C-CON-IA
 
 2. Configurar la base de datos:
    Ejecutar los scripts de base de datos y procedimientos almacenados en su instancia de SQL Server.
