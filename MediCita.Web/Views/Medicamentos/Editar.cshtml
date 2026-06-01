@@ -1,0 +1,198 @@
+﻿@model MediCita.Web.Entidades.Medicamento
+
+@{
+    ViewData["Title"] = "Editar Medicamento";
+    bool sinDescuento = string.IsNullOrWhiteSpace(Model.Promocion);
+}
+
+<div class="container mt-4 animate__animated animate__fadeIn">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h3 class="fw-bold text-dark mb-0">
+                <i class="bi bi-pencil-square text-primary me-2"></i>Editar Medicamento
+            </h3>
+            <p class="text-muted small mb-0">Gestión de inventario y promociones de ClinPiura</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-arrow-left me-1"></i> Volver al listado
+        </a>
+    </div>
+
+    @if (ViewData["Mensaje"] != null)
+    {
+        <div class="alert alert-danger border-0 shadow-sm rounded-4 animate__animated animate__shakeX">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @ViewData["Mensaje"]
+        </div>
+    }
+
+    <form asp-action="Editar" method="post" class="needs-validation">
+        <input type="hidden" asp-for="IdMedicamento" />
+
+        <div class="row g-4">
+            <div class="col-md-7">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-file-earmark-text me-2 text-primary"></i>Información General</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Nombre del Medicamento</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-capsule"></i></span>
+                                <input asp-for="Nombre" class="form-control bg-light border-start-0" placeholder="Ej: Amoxicilina 500mg" />
+                            </div>
+                            <span asp-validation-for="Nombre" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Laboratorio</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-building"></i></span>
+                                    <input asp-for="Laboratorio" class="form-control bg-light border-start-0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Categoría</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-tag"></i></span>
+                                    <input asp-for="Categoria" class="form-control bg-light border-start-0" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Precio de Venta</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-primary text-white border-0">S/</span>
+                                    <input asp-for="Precio" type="number" step="0.01" class="form-control fw-bold" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Stock Actual</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-box-seam"></i></span>
+                                    <input asp-for="Stock" type="number" class="form-control bg-light border-start-0" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="form-label fw-semibold">Descripción del Producto</label>
+                            <textarea asp-for="Descripcion" class="form-control bg-light" rows="4" placeholder="Indique indicaciones o componentes..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-image me-2 text-primary"></i>Imagen del Producto</h6>
+                    </div>
+                    <div class="card-body p-4 text-center">
+                        <div class="image-preview-wrapper mb-3 mx-auto shadow-sm rounded-4 overflow-hidden bg-light d-flex align-items-center justify-content-center" style="height: 220px; width: 100%;">
+                            <img id="ImagenPreview"
+                                 src="@(!string.IsNullOrWhiteSpace(Model.ImagenUrl) ? Model.ImagenUrl : "https://via.placeholder.com/400x400?text=Sin+Imagen")"
+                                 class="img-fluid" style="max-height: 100%; object-fit: contain;" />
+                        </div>
+                        <div class="text-start">
+                            <label class="form-label fw-semibold small text-muted">URL de la Imagen</label>
+                            <input asp-for="ImagenUrl" id="ImagenUrlInput" class="form-control form-control-sm border-dashed" placeholder="https://..." />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 bg-light">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h6 class="mb-0 fw-bold"><i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Oferta Activa</h6>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="chkSinDescuento" @(sinDescuento ? "checked" : "")>
+                                <label class="form-check-label small fw-semibold" for="chkSinDescuento">Desactivar</label>
+                            </div>
+                        </div>
+
+                        <div class="promo-box p-3 rounded-3 bg-white border">
+                            <label class="form-label small text-muted mb-1">Porcentaje de descuento</label>
+                            <div class="input-group input-group-lg">
+                                <input asp-for="Promocion" id="PromocionInput" class="form-control border-0 bg-transparent text-center fw-bold"
+                                       placeholder="0%" disabled="@(sinDescuento)" />
+                                <span class="input-group-text border-0 bg-transparent text-primary fw-bold fs-4">%</span>
+                            </div>
+                        </div>
+                        <p class="text-muted x-small mt-2 mb-0 text-center italic">El descuento se aplicará automáticamente en la tienda.</p>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow">
+                        <i class="bi bi-check-circle-fill me-2"></i>Guardar Cambios
+                    </button>
+                    <a asp-action="Index" class="btn btn-link text-decoration-none text-muted small">
+                        Descartar cambios y salir
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .input-group-text {
+        border-color: transparent;
+    }
+
+    .form-control:focus {
+        box-shadow: none;
+        border-color: var(--bs-primary);
+    }
+
+    .border-dashed {
+        border-style: dashed !important;
+    }
+
+    .x-small {
+        font-size: 0.75rem;
+    }
+
+    .italic {
+        font-style: italic;
+    }
+
+    /* Animación simple al cambiar switch */
+    #PromocionInput:disabled {
+        background-color: #f8f9fa !important;
+        color: #dee2e6;
+        cursor: not-allowed;
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const imgInput = document.getElementById('ImagenUrlInput');
+        const imgPreview = document.getElementById('ImagenPreview');
+        const chkSinDescuento = document.getElementById('chkSinDescuento');
+        const promoInput = document.getElementById('PromocionInput');
+
+        // Vista previa en tiempo real
+        imgInput.addEventListener('input', () => {
+            const url = imgInput.value.trim();
+            imgPreview.src = url !== "" ? url : "https://via.placeholder.com/400x400?text=Sin+Imagen";
+        });
+
+        // Toggle de Promoción
+        chkSinDescuento.addEventListener('change', () => {
+            promoInput.disabled = chkSinDescuento.checked;
+            if (chkSinDescuento.checked) {
+                promoInput.value = '';
+                promoInput.parentElement.parentElement.classList.add('bg-light');
+            } else {
+                promoInput.parentElement.parentElement.classList.remove('bg-light');
+                promoInput.focus();
+            }
+        });
+    </script>
+}

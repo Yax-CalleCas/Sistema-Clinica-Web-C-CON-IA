@@ -1,0 +1,156 @@
+﻿@model List<MediCita.Web.Entidades.ReporteCita>
+@{
+    ViewData["Title"] = "Reporte de Citas";
+    bool tieneDatos = Model != null && Model.Any();
+    // Normalizamos las fechas para los enlaces
+    string fInicioUrl = DateTime.Parse(ViewBag.FechaInicio.ToString()).ToString("yyyy-MM-dd");
+    string fFinUrl = DateTime.Parse(ViewBag.FechaFin.ToString()).ToString("yyyy-MM-dd");
+}
+
+<link href="~/css/Reportes.css" rel="stylesheet" />
+
+<div class="container mt-4 animate__animated animate__fadeIn">
+    <div class="card border-0 shadow-sm mb-4 report-card overflow-hidden">
+        <div class="card-body p-4 bg-white">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h4 class="fw-bold text-dark mb-1">
+                        <i class="bi bi-graph-up-arrow text-primary me-2"></i>Análisis de Citas
+                    </h4>
+                    <p class="text-muted small mb-0">
+                        Mostrando registros desde <strong>@ViewBag.FechaInicio</strong> hasta <strong>@ViewBag.FechaFin</strong>
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                    <div class="btn-group shadow-sm rounded-pill">
+                        @* CORRECCIÓN: Enviamos fechas en formato ISO y aseguramos que el estado no sea null *@
+                        <a asp-action="ExportarCitasPdf"
+                           asp-route-fechaInicio="@fInicioUrl"
+                           asp-route-fechaFin="@fFinUrl"
+                           asp-route-estado="@(ViewBag.Estado == "Todos" ? "" : ViewBag.Estado)"
+                           target="_blank"
+                           class="btn btn-danger btn-sm px-3 @(tieneDatos ? "" : "disabled")">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Generar PDF
+                        </a>
+                        <a asp-action="Index" class="btn btn-light btn-sm px-3 border-start">
+                            <i class="bi bi-search me-1"></i> Nueva Consulta
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer bg-light border-0 py-3">
+            <div class="row text-center">
+                <div class="col-4 border-end">
+                    <div class="h5 fw-bold mb-0">@(Model?.Count ?? 0)</div>
+                    <div class="x-small text-muted text-uppercase">Total Citas</div>
+                </div>
+                <div class="col-4 border-end">
+                    <div class="h5 fw-bold mb-0 text-success">
+                        S/ @(tieneDatos? Model.Sum(x => x.MontoPagar ?? 0).ToString("F2") : "0.00")
+                    </div>
+                    <div class="x-small text-muted text-uppercase">Recaudación</div>
+                </div>
+                <div class="col-4">
+                    <div class="h5 fw-bold mb-0 text-primary">@(ViewBag.Estado ?? "Todos")</div>
+                    <div class="x-small text-muted text-uppercase">Filtro Estado</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="mb-3 position-relative">
+        <span class="position-absolute top-50 start-0 translate-middle-y ps-3">
+            <i class="bi bi-filter text-muted"></i>
+        </span>
+        <input type="text" id="filtro" class="form-control ps-5 rounded-pill border-0 shadow-sm"
+               placeholder="Filtrar por nombre, médico o especialidad en tiempo real...">
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-report align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Paciente</th>
+                        <th>Médico / Especialidad</th>
+                        <th class="text-center">Fecha y Hora</th>
+                        <th class="text-end">Monto</th>
+                        <th class="text-center pe-4">Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla">
+                    @if (tieneDatos)
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">@item.Paciente</div>
+                                    <div class="text-muted x-small">ID Cita: #@item.IdCita</div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-2 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width:32px; height:32px">
+                                            <i class="bi bi-person-badge small"></i>
+                                        </div>
+                                        <div>
+                                            <div class="small fw-semibold">@item.Medico</div>
+                                            <div class="text-muted x-small text-uppercase">@item.Especialidad</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="small">@item.FechaCita.ToString("dd MMM yyyy")</div>
+                                    <div class="badge bg-light text-dark fw-normal border">
+                                        <i class="bi bi-clock me-1"></i>
+                                        @(item.HoraInicio.HasValue ? $"{item.HoraInicio:hh\\:mm}" : "--:--")
+                                    </div>
+                                </td>
+                                <td class="text-end fw-bold text-dark">
+                                    S/ @(item.MontoPagar?.ToString("F2") ?? "0.00")
+                                </td>
+                                <td class="text-center pe-4">
+                                    @* Control de nulos en el estado *@
+                                    <span class="status-badge status-@(item.Estado?.ToLower() ?? "default")">
+                                        @(item.Estado == "P" ? "Pendiente" : item.Estado == "A" ? "Atendida" : "Cancelada")
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <i class="bi bi-clipboard-x fs-1 text-muted opacity-25"></i>
+                                <p class="text-muted mt-2">No se encontraron citas en este rango de fechas.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Filtro en JS corregido para evitar errores si la tabla está vacía
+        const inputFiltro = document.getElementById("filtro");
+        if(inputFiltro) {
+            inputFiltro.addEventListener("keyup", function () {
+                const texto = this.value.toLowerCase();
+                const filas = document.querySelectorAll("#tabla tr");
+                filas.forEach(fila => {
+                    if(fila.cells.length > 1) { // Evita filtrar el mensaje de "No hay datos"
+                        fila.style.display = fila.innerText.toLowerCase().includes(texto) ? "" : "none";
+                    }
+                });
+            });
+        }
+    </script>
+}

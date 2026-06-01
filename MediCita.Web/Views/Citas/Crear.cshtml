@@ -1,0 +1,109 @@
+﻿@model List<MediCita.Web.Entidades.Medico>
+
+@{
+    ViewData["Title"] = "Reservar Cita";
+    var fechaSeleccionada = Context.Request.Query["fecha"].ToString();
+    if (string.IsNullOrEmpty(fechaSeleccionada))
+    {
+        fechaSeleccionada = DateTime.Today.ToString("yyyy-MM-dd");
+    }
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4 fw-bold">Especialistas Disponibles</h2>
+
+    <!-- 🔍 Filtro por fecha -->
+    <form method="get" asp-action="Crear" class="row g-3 mb-4 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Consultar otra fecha</label>
+            <input type="date"
+                   name="fecha"
+                   class="form-control"
+                   value="@fechaSeleccionada" />
+        </div>
+
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-dark w-100">
+                <i class="fas fa-filter me-1"></i> Filtrar
+            </button>
+        </div>
+    </form>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning">
+            No hay médicos disponibles para esta fecha 😕
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle shadow-sm border">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Médico</th>
+                        <th>Especialidad</th>
+                        <th>Modalidad</th>
+                        <th>Precio</th>
+                        <th class="text-center">Acción</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var m in Model)
+                    {
+                        <tr>
+                            <!-- 👨‍⚕️ Médico con foto -->
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="@(string.IsNullOrEmpty(m.ImagenUrl)
+                                                                                         ? "/img/doctor-default.png"
+                                                                                         : m.ImagenUrl)"
+                                 class="rounded-circle border"
+                                 width="55"
+                                 height="55"
+                                 style="object-fit: cover" />
+
+                                    <div>
+                                        <div class="fw-semibold">@m.NombreCompleto</div>
+                                        <small class="text-muted">CMP: @m.CMP</small>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-info text-dark">
+                                    @m.Especialidad
+                                </span>
+                            </td>
+
+                            <td>
+                        @if (!string.IsNullOrEmpty(m.TipoServicio))
+                                {
+                                    <span class="badge bg-secondary">@m.TipoServicio</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+
+                            <td class="fw-bold text-success">
+                                S/ @m.PrecioConsulta.ToString("F2")
+                            </td>
+
+                            <td class="text-center">
+                                <a class="btn btn-outline-primary btn-sm rounded-pill px-3"
+                                   asp-action="Horarios"
+                                   asp-route-idMedico="@m.IdMedico"
+                                   asp-route-fecha="@fechaSeleccionada">
+                                    Ver Horarios
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

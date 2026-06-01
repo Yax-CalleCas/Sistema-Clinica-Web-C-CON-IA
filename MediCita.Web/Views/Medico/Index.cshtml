@@ -1,0 +1,28 @@
+﻿@{
+    ViewData["Title"] = "Panel Médico";
+}
+
+<div class="container mt-4">
+    <h2 class="text-primary mb-4">
+        <i class="bi bi-person-badge"></i> Panel del Médico
+    </h2>
+
+    <div class="card p-4 shadow-sm">
+        <h4>Bienvenido, doctor </h4>
+        <p>Desde aquí puede administrar sus citas: ver, atender o cancelar.</p>
+
+        <div class="d-flex gap-2 mt-3">
+            <!-- Botón existente -->
+            <a href="@Url.Action("MisCitasMedico", "Citas")"
+               class="btn btn-outline-primary">
+                 Ver mis citas
+            </a>
+
+      
+            <a href="@Url.Action("PanelMedico", "Citas")"
+               class="btn btn-primary">
+                 Panel de citas
+            </a>
+        </div>
+    </div>
+</div>

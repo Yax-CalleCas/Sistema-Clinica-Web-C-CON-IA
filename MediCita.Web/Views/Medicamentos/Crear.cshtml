@@ -1,0 +1,185 @@
+﻿@model MediCita.Web.Entidades.Medicamento
+
+@{
+    ViewData["Title"] = "Crear Medicamento";
+    bool sinDescuento = string.IsNullOrWhiteSpace(Model?.Promocion);
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9 col-xl-8">
+            <!-- Card principal -->
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <!-- Header -->
+                <div class="card-header bg-gradient text-white text-center py-4"
+                     style="background: linear-gradient(135deg, #198C86 0%, #20c997 100%);">
+                    <h3 class="mb-1 fw-bold">
+                        <i class="bi bi-capsule-pill me-2"></i>Registrar Nuevo Medicamento
+                    </h3>
+                    <p class="mb-0 opacity-90">Complete los datos del producto farmacéutico</p>
+                </div>
+
+                <!-- Cuerpo -->
+                <div class="card-body p-4 p-md-5">
+                    @if (ViewData["Mensaje"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            @ViewData["Mensaje"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Crear" method="post" enctype="multipart/form-data">
+                        <div class="row g-4">
+                            <!-- Nombre -->
+                            <div class="col-md-6">
+                                <label asp-for="Nombre" class="form-label fw-bold">Nombre del Medicamento</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-capsule"></i></span>
+                                    <input asp-for="Nombre" class="form-control" placeholder="Ej: Paracetamol 500mg" />
+                                </div>
+                                <span asp-validation-for="Nombre" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Laboratorio -->
+                            <div class="col-md-6">
+                                <label asp-for="Laboratorio" class="form-label fw-bold">Laboratorio</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                    <input asp-for="Laboratorio" class="form-control" placeholder="Ej: Pfizer" />
+                                </div>
+                                <span asp-validation-for="Laboratorio" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Precio -->
+                            <div class="col-md-6">
+                                <label asp-for="Precio" class="form-label fw-bold">Precio Unitario (S/)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">S/</span>
+                                    <input asp-for="Precio" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" />
+                                </div>
+                                <span asp-validation-for="Precio" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Stock -->
+                            <div class="col-md-6">
+                                <label asp-for="Stock" class="form-label fw-bold">Stock Inicial</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-box-seam"></i></span>
+                                    <input asp-for="Stock" type="number" min="0" class="form-control" placeholder="0" />
+                                </div>
+                                <span asp-validation-for="Stock" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Imagen URL -->
+                            <div class="col-12">
+                                <label asp-for="ImagenUrl" class="form-label fw-bold">URL de la Imagen</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-image"></i></span>
+                                    <input asp-for="ImagenUrl" id="ImagenUrlInput" class="form-control"
+                                           placeholder="https://ejemplo.com/imagen.jpg" />
+                                </div>
+                                <small class="text-muted">Se mostrará una vista previa en tiempo real</small>
+
+                                <!-- Vista previa -->
+                                <div class="mt-3 text-center">
+                                    <img id="ImagenPreview"
+                                         src="https://via.placeholder.com/220x220/198C86/ffffff?text=Previsualización"
+                                         class="img-thumbnail shadow-sm"
+                                         style="max-height: 220px; border: 3px solid #198C86;" />
+                                </div>
+                                <span asp-validation-for="ImagenUrl" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Checkbox Sin Descuento -->
+                            <div class="col-12 mt-3">
+                                <div class="form-check form-switch form-switch-lg">
+                                    <input class="form-check-input" type="checkbox" id="chkSinDescuento"
+                                           @(sinDescuento ? "checked" : "") />
+                                    <label class="form-check-label fw-bold" for="chkSinDescuento">
+                                        Sin promoción / descuento
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Promoción -->
+                            <div class="col-12">
+                                <label asp-for="Promocion" class="form-label fw-bold">Promoción (%)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-tags"></i></span>
+                                    <input asp-for="Promocion" id="PromocionInput" class="form-control"
+                                           placeholder="Ej: 15%" disabled="@(sinDescuento)" />
+                                </div>
+                                <small class="text-muted">Solo porcentaje. Ejemplo: 10% o 25%</small>
+                                <span asp-validation-for="Promocion" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Categoría -->
+                            <div class="col-12">
+                                <label asp-for="Categoria" class="form-label fw-bold">Categoría</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-tags-fill"></i></span>
+                                    <input asp-for="Categoria" class="form-control"
+                                           placeholder="Ej: Analgésicos, Antibióticos, Vitaminas" />
+                                </div>
+                                <span asp-validation-for="Categoria" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Descripción -->
+                            <div class="col-12">
+                                <label asp-for="Descripcion" class="form-label fw-bold">Descripción</label>
+                                <textarea asp-for="Descripcion" class="form-control" rows="4"
+                                          placeholder="Detalles del medicamento, indicaciones, contraindicaciones..."></textarea>
+                                <span asp-validation-for="Descripcion" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="mt-5 d-flex justify-content-end gap-3">
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg px-5">
+                                <i class="bi bi-arrow-left me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg px-5 shadow">
+                                <i class="bi bi-save me-2"></i>Guardar Medicamento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Toggle promoción
+        const chkSinDescuento = document.getElementById('chkSinDescuento');
+        const inputPromocion = document.getElementById('PromocionInput');
+
+        chkSinDescuento.addEventListener('change', () => {
+            inputPromocion.disabled = chkSinDescuento.checked;
+            if (chkSinDescuento.checked) {
+                inputPromocion.value = '';
+            }
+        });
+
+        // Previsualización de imagen en tiempo real
+        const inputUrl = document.getElementById('ImagenUrlInput');
+        const preview = document.getElementById('ImagenPreview');
+
+        inputUrl.addEventListener('input', () => {
+            const url = inputUrl.value.trim();
+            preview.src = url || 'https://via.placeholder.com/220x220/198C86/ffffff?text=Previsualización';
+        });
+
+        // Validar URL al perder foco
+        inputUrl.addEventListener('blur', () => {
+            const url = inputUrl.value.trim();
+            if (url && !url.match(/^https?:\/\//)) {
+                preview.src = 'https://via.placeholder.com/220x220/ff0000/ffffff?text=URL+Inválida';
+            }
+        });
+    </script>
+}

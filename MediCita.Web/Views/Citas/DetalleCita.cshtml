@@ -1,0 +1,71 @@
+﻿@model MediCita.Web.Entidades.Cita
+@{
+    ViewData["Title"] = "Detalle de la Cita";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="card shadow border-0">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Detalle de la Consulta Médica</h5>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row align-items-center mb-4">
+                <div class="col-md-3 text-center">
+                    <img src="@Model.ImagenUrl"
+                         class="img-fluid rounded-circle shadow"
+                         style="max-height:150px"
+                         onerror="this.src='/img/doctor-default.png'" />
+                </div>
+
+                <div class="col-md-9">
+                    <h4 class="fw-bold mb-1">@Model.Medico</h4>
+                    <span class="badge bg-info">@Model.Especialidad</span>
+                    <p class="mb-1 mt-2"><strong>CMP:</strong> @Model.CMP</p>
+                </div>
+            </div>
+
+            <hr />
+
+            <p>
+                <strong>Fecha:</strong>
+                @Model.FechaCita.ToLongDateString()
+            </p>
+            <p>
+                <strong>Horario:</strong>
+                @Model.HoraInicio.ToString(@"hh\:mm") -
+                @Model.HoraFin.ToString(@"hh\:mm")
+            </p>
+
+            <p>
+                <strong>Estado:</strong>
+                <span class="badge bg-success">Atendida</span>
+            </p>
+
+            <hr />
+
+            <h5 class="fw-bold">Diagnóstico / Indicaciones</h5>
+
+            @if (string.IsNullOrEmpty(Model.Nota))
+            {
+                <div class="alert alert-warning">
+                    El médico aún no ha registrado indicaciones.
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-light border">
+                    @Model.Nota
+                </div>
+            }
+
+            <div class="text-end mt-4">
+                <a asp-action="MisCitasPaciente" class="btn btn-secondary">
+                    Volver
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>

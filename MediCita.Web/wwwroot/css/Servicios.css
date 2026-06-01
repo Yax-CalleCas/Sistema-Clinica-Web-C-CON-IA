@@ -1,0 +1,115 @@
+﻿/* ===== SECCIÓN SERVICIOS ===== */
+.services-section {
+    padding: 80px 0;
+    background: linear-gradient(135deg, #f5fdfc, #eef7f7);
+    min-height: 100vh;
+}
+
+/* ===== TARJETAS ===== */
+.service-card {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.35s ease;
+    background: #fff;
+    position: relative;
+}
+
+    .service-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Imagen farmacia */
+    .service-card img {
+        width: 100%;
+        height: 230px;
+        object-fit: cover;
+    }
+
+/* ===== ICONOS ===== */
+.service-icon {
+    font-size: 4rem;
+    color: #009688;
+    background: rgba(0, 150, 136, 0.1);
+    padding: 20px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* ===== TEXTOS ===== */
+.services-section h2 {
+    color: #0f172a;
+    font-size: 2.5rem;
+}
+
+.services-section p {
+    font-size: 1rem;
+}
+
+/* ===== BOTONES ===== */
+.btn-primary-teal {
+    background-color: #009688;
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+    .btn-primary-teal:hover {
+        background-color: #00796b;
+        color: white;
+        transform: scale(1.05);
+    }
+
+.btn-outline-teal {
+    border: 2px solid #009688;
+    color: #009688;
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+    .btn-outline-teal:hover {
+        background: #009688;
+        color: white;
+        transform: scale(1.05);
+    }
+
+/* ===== MODAL ===== */
+.modal-content {
+    border-radius: 20px;
+    border: none;
+    overflow: hidden;
+}
+
+.modal-header {
+    background: #009688;
+    color: white;
+}
+
+.modal-title {
+    font-weight: bold;
+}
+
+.modal-body ul {
+    padding-left: 20px;
+}
+
+.modal-body li {
+    margin-bottom: 10px;
+    color: #374151;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .services-section {
+        padding: 50px 20px;
+    }
+
+        .services-section h2 {
+            font-size: 2rem;
+        }
+
+    .service-card {
+        margin-bottom: 20px;
+    }
+}

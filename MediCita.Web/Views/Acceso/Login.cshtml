@@ -1,0 +1,176 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>Acceso - ClinPiura</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #e0f2fe, #f8fafc);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto;
+        }
+
+        .login-card {
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: 0 20px 45px rgba(0,0,0,.12);
+            background: #fff;
+        }
+
+        .login-bg {
+            background: linear-gradient(rgba(37,99,235,.6), rgba(37,99,235,.6)), url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=900&q=80') center / cover no-repeat;
+        }
+
+        .brand-icon {
+            width: 70px;
+            height: 70px;
+            background: #2563eb;
+            color: #fff;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 8px 20px rgba(37,99,235,.4);
+        }
+
+        .form-control {
+            border-radius: 50px;
+            padding: .75rem 1.1rem;
+        }
+
+            .form-control:focus {
+                box-shadow: 0 0 0 .2rem rgba(37,99,235,.25);
+                border-color: #2563eb;
+            }
+
+        .btn-primary {
+            background-color: #2563eb;
+            border-color: #2563eb;
+        }
+
+            .btn-primary:hover {
+                background-color: #1e40af;
+                border-color: #1e40af;
+            }
+
+        .btn-outline-primary {
+            border-radius: 50px;
+        }
+
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9 col-md-11">
+                <div class="card login-card border-0">
+                    <div class="row g-0">
+
+                        <!-- Imagen -->
+                        <div class="col-md-6 d-none d-md-block login-bg"></div>
+
+                        <!-- Formulario -->
+                        <div class="col-md-6 p-5">
+                            <div class="text-center mb-4">
+                                <div class="brand-icon mb-3">
+                                    <i class="bi bi-hospital-fill"></i>
+                                </div>
+                                <h2 class="fw-bold mb-1">ClinPiura</h2>
+                                <p class="text-muted small">
+                                    Accede de forma segura a tu cuenta
+                                </p>
+                            </div>
+
+                            <form asp-controller="Acceso" asp-action="Login" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">
+                                        Correo electrónico
+                                    </label>
+                                    <input type="email"
+                                           name="correo"
+                                           class="form-control"
+                                           placeholder="correo@ejemplo.com"
+                                           required />
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold small">
+                                        Contraseña
+                                    </label>
+                                    <input type="password"
+                                           name="clave"
+                                           class="form-control"
+                                           placeholder="••••••••"
+                                           required />
+                                </div>
+
+                                <button class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow-sm">
+                                    Ingresar
+                                </button>
+                            </form>
+
+                            <hr class="my-4">
+
+                            <a asp-action="Registro"
+                               class="btn btn-outline-primary w-100 fw-semibold py-2">
+                                Crear cuenta nueva
+                            </a>
+
+                            <div class="text-center mt-3 login-footer">
+                                <a asp-controller="Home"
+                                   asp-action="Index"
+                                   class="text-muted small text-decoration-none">
+                                    Volver al inicio
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        const successMsg = '@TempData["ExitoRegistro"]';
+        const errorMsg = '@TempData["Error"]';
+
+        if (successMsg) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Registro exitoso',
+                text: successMsg,
+                confirmButtonColor: '#2563eb'
+            });
+        }
+
+        if (errorMsg) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: errorMsg,
+                confirmButtonColor: '#dc2626'
+            });
+        }
+    </script>
+
+</body>
+</html>

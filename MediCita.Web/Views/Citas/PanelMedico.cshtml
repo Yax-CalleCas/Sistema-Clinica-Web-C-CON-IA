@@ -1,0 +1,125 @@
+﻿@model List<MediCita.Web.Entidades.Cita>
+
+@{
+    ViewData["Title"] = "Panel del Médico";
+}
+
+<div class="container mt-4">
+
+    <h3 class="fw-bold mb-4"> Panel del Médico</h3>
+
+    <!-- FILTROS -->
+    <form method="get" class="row g-3 align-items-end mb-4">
+        <div class="col-md-4">
+            <label class="form-label fw-semibold"> Fecha</label>
+            <input type="date"
+                   name="fecha"
+                   class="form-control"
+                   value="@Context.Request.Query["fecha"]" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label fw-semibold"> Estado</label>
+            <select name="estado" class="form-select">
+                <option value="">Todos</option>
+                <option value="P">Pendiente</option>    
+                <option value="A">Atendida</option>
+                <option value="C">Cancelada</option>
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <button class="btn btn-primary w-100">
+                 Filtrar
+            </button>
+        </div>
+    </form>
+
+    <!-- TABLA -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Paciente</th>
+                        <th>Fecha</th>
+                        <th>Horario</th>
+                        <th>Estado</th>
+                        <th>Monto</th>
+                        <th>Nota</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var c in Model)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@c.Paciente</td>
+
+                                <td>@c.FechaCita.ToString("dd/MM/yyyy")</td>
+
+                                <td>
+                                    @c.HoraInicio.ToString(@"hh\:mm")
+                                    -
+                                    @c.HoraFin.ToString(@"hh\:mm")
+                                </td>
+
+                                <td>
+                                    @if (c.Estado == "P")
+                                    {
+                                        <span class="badge bg-warning text-dark">Pendiente</span>
+                                    }
+                                    else if (c.Estado == "A")
+                                    {
+                                        <span class="badge bg-success">Atendida</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Cancelada</span>
+                                    }
+                        </td>
+
+                        <td>S/ @c.MontoPagar</td>
+
+                        <td>
+                            @(string.IsNullOrWhiteSpace(c.Nota)
+                                                        ? "—"
+                                                        : c.Nota)
+                        </td>
+
+                                <td>
+                            @if (c.Estado == "P")
+                                    {
+                                        <a asp-action="Atender"
+                                           asp-route-idCita="@c.IdCita"
+                                           class="btn btn-sm btn-outline-primary">
+                                            Atender
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Finalizada</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                No hay citas para mostrar 
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+</div>

@@ -1,0 +1,38 @@
+﻿<div class="modal fade" id="requireLoginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-primary-teal text-white border-0">
+                <h5 class="modal-title fw-bold">¡Inicia sesión!</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <i class="bi bi-lock-fill display-1 text-primary-teal mb-4"></i>
+                <p>Debes estar registrado para continuar.</p>
+                <button type="button" class="btn btn-primary-teal rounded-pill" data-bs-toggle="modal" data-bs-target="#loginModal" data-bs-dismiss="modal">Iniciar Sesión</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="row g-0">
+                <div class="col-md-7 p-5">
+                    <h3 class="fw-bold mb-4">Iniciar Sesión</h3>
+                    <form asp-controller="Acceso" asp-action="Login" method="post">
+                        <div class="form-floating mb-3">
+                            <input type="email" name="correo" class="form-control" placeholder="Correo" required />
+                            <label>Correo electrónico</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="password" name="clave" class="form-control" placeholder="Contraseña" required />
+                            <label>Contraseña</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary-teal w-100 rounded-pill py-3">INGRESAR</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

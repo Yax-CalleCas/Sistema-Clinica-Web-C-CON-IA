@@ -1,0 +1,148 @@
+﻿@model List<MediCita.Web.Entidades.HorarioMedico>
+@{
+    ViewData["Title"] = "Seleccionar Horario";
+    var fecha = (DateTime)ViewBag.Fecha;
+    var precio = (decimal)ViewBag.Precio;
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <h3 class="card-title text-primary">Pasos finales para su cita</h3>
+            <p class="text-muted">
+                Médico: <strong>@ViewBag.NombreMedico</strong> |
+                Fecha: <strong>@fecha.ToLongDateString()</strong>
+            </p>
+            <hr />
+
+            <h5 class="mb-3">Horas disponibles:</h5>
+            <div class="row row-cols-2 row-cols-md-4 g-3">
+                @foreach (var h in Model)
+                {
+                    <div class="col">
+                        <button type="button"
+                                class="btn btn-outline-success w-100 py-3 fw-bold"
+                                onclick="abrirPago('@h.HoraInicio', '@h.HoraFin')">
+                            @h.HoraInicio.ToString(@"hh\:mm")
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalPago" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Confirmar Pago y Reserva</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form asp-action="ConfirmarCitaConPago"
+                  method="post"
+                  class="needs-validation"
+                  novalidate>
+
+                @Html.AntiForgeryToken()
+
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <h6 class="text-muted">Monto a pagar</h6>
+                        <h2 class="text-success">S/ @precio.ToString("F2")</h2>
+                    </div>
+
+                    <input type="hidden" name="idPaciente" value="@ViewBag.IdPaciente" />
+                    <input type="hidden" name="idMedico" value="@ViewBag.IdMedico" />
+                    <input type="hidden" name="fecha" value="@fecha.ToString("yyyy-MM-dd")" />
+                    <input type="hidden" name="monto" value="@precio" />
+                    <input type="hidden" id="hInicio" name="horaInicioStr" />
+                    <input type="hidden" id="hFin" name="horaFinStr" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Número de Tarjeta</label>
+                        <input type="text"
+                               class="form-control"
+                               name="cardNumber"
+                               inputmode="numeric"
+                               pattern="[0-9]{16}"
+                               maxlength="16"
+                               autocomplete="cc-number"
+                               placeholder="0000000000000000"
+                               required />
+                        <div class="invalid-feedback">
+                            Ingrese un número de tarjeta válido de 16 dígitos.
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label">Expiración (MM/YY)</label>
+                            <input type="text"
+                                   class="form-control"
+                                   name="expiry"
+                                   pattern="(0[1-9]|1[0-2])\/[0-9]{2}"
+                                   placeholder="MM/YY"
+                                   autocomplete="cc-exp"
+                                   required />
+                            <div class="invalid-feedback">
+                                Formato válido: MM/YY.
+                            </div>
+                        </div>
+
+                        <div class="col-6 mb-3">
+                            <label class="form-label">CVV</label>
+                            <input type="password"
+                                   class="form-control"
+                                   name="cvv"
+                                   inputmode="numeric"
+                                   pattern="[0-9]{3}"
+                                   maxlength="3"
+                                   autocomplete="cc-csc"
+                                   required />
+                            <div class="invalid-feedback">
+                                CVV inválido.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary px-4">
+                        Pagar y Reservar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function abrirPago(inicio, fin) {
+            document.getElementById('hInicio').value = inicio;
+            document.getElementById('hFin').value = fin;
+            new bootstrap.Modal(document.getElementById('modalPago')).show();
+        }
+
+        (function () {
+            'use strict';
+            var forms = document.querySelectorAll('.needs-validation');
+
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+        })();
+    </script>
+}

@@ -1,0 +1,97 @@
+﻿/* Paleta de colores Premium */
+:root {
+    --primary-teal: #0d9488;
+    --secondary-teal: #0f766e;
+    --light-bg: #f8fafc;
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text-dark);
+}
+
+/* Navbar más elegante */
+.navbar {
+    padding: 15px 0;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+}
+
+.nav-link {
+    color: var(--text-dark) !important;
+    padding: 0 15px !important;
+    transition: color 0.3s;
+}
+
+    .nav-link:hover {
+        color: var(--primary-teal) !important;
+    }
+
+/* Hero Section */
+.hero-container {
+    height: 85vh;
+    min-height: 500px;
+    position: relative;
+}
+
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5));
+}
+
+.carousel-caption {
+    bottom: 25%;
+    text-align: left;
+    left: 10%;
+    right: 10%;
+}
+
+/* Cards de Servicios Mejoradas */
+.card-service {
+    border: none !important;
+    border-radius: 20px !important;
+    padding: 40px !important;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    background: #ffffff;
+}
+
+    .card-service:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 20px 40px rgba(13, 148, 136, 0.15) !important;
+    }
+
+.text-teal {
+    color: var(--primary-teal);
+}
+
+/* Botones */
+.btn-teal {
+    background-color: var(--primary-teal);
+    color: white;
+    transition: all 0.3s;
+}
+
+    .btn-teal:hover {
+        background-color: var(--secondary-teal);
+        transform: scale(1.02);
+    }
+
+.btn-outline-teal {
+    border: 2px solid var(--primary-teal);
+    color: var(--primary-teal);
+    transition: all 0.3s;
+}
+
+    .btn-outline-teal:hover {
+        background-color: var(--primary-teal);
+        color: white;
+    }
+
+/* Secciones */
+.section-title {
+    font-weight: 800;
+    color: var(--text-dark);
+}

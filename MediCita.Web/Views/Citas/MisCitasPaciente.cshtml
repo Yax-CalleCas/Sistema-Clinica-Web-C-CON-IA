@@ -1,0 +1,168 @@
+﻿@model List<MediCita.Web.Entidades.Cita>
+@{
+    ViewData["Title"] = "Mis Citas";
+}
+
+<div class="container mt-4 mb-5">
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-2">
+            <i class="bi bi-calendar-check me-2"></i> Mis Citas Médicas
+        </h2>
+        <span class="badge bg-secondary fs-6">
+            Total: @Model.Count
+        </span>
+    </div>
+
+    <!-- Alertas -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center shadow-sm py-4">
+            <h5 class="mb-2">Aún no tienes citas registradas</h5>
+            <p class="mb-0">
+                <a asp-action="Crear" class="alert-link fw-semibold">
+                    Reserva una cita ahora
+                </a>
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-primary text-center">
+                        <tr>
+                            <th class="text-start ps-4">Especialista (CMP)</th>
+                            <th>Fecha</th>
+                            <th>Horario</th>
+                            <th>Monto</th>
+                            <th>Pago</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="text-center">
+                        @foreach (var c in Model.OrderByDescending(x => x.FechaCita))
+                        {
+                            <tr>
+                                <!-- Médico -->
+                                <td class="fw-semibold text-start ps-4">
+                                    <i class="bi bi-person-badge me-2"></i>
+                                    @c.CMP
+                                </td>
+
+                                <!-- Fecha -->
+                                <td>
+                                    @c.FechaCita.ToString("dd/MM/yyyy")
+                                </td>
+
+                                <!-- Horario -->
+                                <td class="text-muted">
+                                    <i class="bi bi-clock me-1"></i>
+                                    @c.HoraInicio.ToString(@"hh\:mm")
+                                    -
+                                    @c.HoraFin.ToString(@"hh\:mm")
+                                </td>
+
+                                <!-- Monto -->
+                                <td class="fw-bold text-success">
+                                    S/ @c.MontoPagar.ToString("F2")
+                                </td>
+
+                                <!-- Pago -->
+                                <td>
+                                    <span class="badge bg-light text-success border border-success px-3">
+                                        Pagado
+                                    </span>
+                                </td>
+
+                                <!-- Estado -->
+                                <td>
+                                    @switch (c.Estado)
+                                    {
+                                        case "P":
+                                            <span class="badge rounded-pill bg-warning text-dark">
+                                                Pendiente
+                                            </span>
+                                            break;
+                                        case "A":
+                                            <span class="badge rounded-pill bg-success">
+                                                Atendida
+                                            </span>
+                                            break;
+                                        case "C":
+                                            <span class="badge rounded-pill bg-danger">
+                                                Cancelada
+                                            </span>
+                                            break;
+                                    }
+                                </td>
+
+                                <!-- Acciones -->
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-primary btn-sm dropdown-toggle"
+                                                type="button"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false">
+                                            Ver opciones
+                                        </button>
+
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                            @if (c.Estado == "A")
+                                            {
+                                                <li>
+                                                    <a class="dropdown-item"
+                                                       asp-action="DetalleCita"
+                                                       asp-route-idCita="@c.IdCita">
+                                                        Ver diagnóstico y notas
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <a class="dropdown-item disabled">
+                                                        Descargar receta
+                                                    </a>
+                                                </li>
+                                            }
+
+                                            @if (c.Estado == "P")
+                                            {
+                                                <li>
+                                                    <span class="dropdown-item text-muted">
+                                                        La cita aún no ha sido atendida
+                                                    </span>
+                                                </li>
+                                            }
+
+                                            @if (c.Estado == "C")
+                                            {
+                                                <li>
+                                                    <span class="dropdown-item text-danger">
+                                                        Esta cita fue cancelada
+                                                    </span>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,438 @@
+﻿@{
+    ViewData["Title"] = "Operations Dashboard";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
+
+<div class="dashboard-wrapper">
+    <div class="container-fluid px-4 py-3">
+
+        <header class="row align-items-center mb-4 pb-2 border-bottom_light">
+            <div class="col-md-7">
+                <div class="d-flex align-items-center">
+                    <div class="clinic-logo-icon me-3">MP</div> <div>
+                        <h1 class="h3 mb-1 text-gray-900 fw-700">Operational Overview</h1>
+                        <p class="text-muted small mb-0">MediCita Clinics • Piura Branch • Real-time metrics</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5 text-md-end mt-3 mt-md-0 d-flex gap-2 justify-content-md-end">
+                <div class="date-display-premium shadow-sm border">
+                    <i class="lar la-calendar-check me-2 text-teal"></i>
+                    <span>@DateTime.Now.ToString("dd MMMM, yyyy")</span>
+                </div>
+                <button onclick="location.reload()" class="btn btn-teal-outline rounded-pill px-4 shadow-sm">
+                    <i class="las la-sync me-1"></i> Refresh
+                </button>
+            </div>
+        </header>
+
+        <div class="row g-4 mb-5">
+            <div class="col-xl-3 col-sm-6">
+                <div class="kpi-card-premium shadow-lg h-100 card-hover">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h6 class="text-muted fw-600 text-uppercase tracking-wider small mb-0">Registered Patients</h6>
+                            <div class="kpi-icon-container bg-teal-soft text-teal">
+                                <i class="las la-id-card la-lg"></i>
+                            </div>
+                        </div>
+                        <h2 class="display-6 fw-700 text-gray-900 mb-1" id="totalPacientes">0</h2>
+                        <span class="text-success small fw-500"><i class="las la-arrow-up"></i> +2.1%</span> <span class="text-muted small">vs last month</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-sm-6">
+                <div class="kpi-card-premium shadow-lg h-100 card-hover">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h6 class="text-muted fw-600 text-uppercase tracking-wider small mb-0">Active Medical Staff</h6>
+                            <div class="kpi-icon-container bg-teal-soft text-teal">
+                                <i class="las la-user-md la-lg"></i>
+                            </div>
+                        </div>
+                        <h2 class="display-6 fw-700 text-gray-900 mb-1" id="totalMedicos">0</h2>
+                        <p class="text-muted small mb-0">12 Specializations</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-sm-6">
+                <div class="kpi-card-premium shadow-lg h-100 card-hover">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h6 class="text-muted fw-600 text-uppercase tracking-wider small mb-0">Today's Appointments</h6>
+                            <div class="kpi-icon-container bg-amber-soft text-amber">
+                                <i class="las la-notes-medical la-lg"></i>
+                            </div>
+                        </div>
+                        <h2 class="display-6 fw-700 text-gray-900 mb-1" id="citasHoy">0</h2>
+                        <a href="#" class="text-teal small fw-600">View Schedule <i class="las la-angle-right small"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-sm-6">
+                <div class="kpi-card-premium kpi-card-teal shadow-lg h-100 card-hover">
+                    <div class="card-body p-4 text-white">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h6 class="text-white-50 fw-600 text-uppercase tracking-wider small mb-0">Monthly Revenue (PEN)</h6>
+                            <div class="kpi-icon-container bg-white-10 text-white">
+                                <i class="las la-hand-holding-usd la-lg"></i>
+                            </div>
+                        </div>
+                        <h2 class="display-6 fw-700 text-white mb-1" id="ventasMes">S/ 0.00</h2>
+                        <span class="text-white-50 small">Current month • Castilla branch</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+
+            <div class="col-lg-8">
+                <div class="content-panel-premium shadow-sm rounded-5 overflow-hidden h-100 bg-white">
+                    <div class="panel-header-premium p-4 border-bottom d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-700 mb-0"><i class="las la-award text-teal me-2"></i>Top-Selling Pharmacy Items</h5>
+                            <p class="text-muted small mb-0">Most demanded medications this month</p>
+                        </div>
+                        <button class="btn btn-sm btn-light border px-3 rounded-pill">Detailed Report</button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle table-us-modern mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-4">Item Details</th>
+                                    <th class="text-center">Units Sold</th>
+                                    <th class="text-end pe-4">Sales Performance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topMedicamentosBody">
+                                <tr>
+                                    <td colspan="3" class="text-center py-5">
+                                        <div class="spinner-custom me-2"></div>
+                                        <span class="text-muted">Fetching latest data...</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+
+                <div id="stockOk" class="content-panel-premium shadow-sm rounded-5 p-5 text-center bg-white h-100 d-flex flex-column justify-content-center align-items-center">
+                    <div class="mb-4">
+                        <div class="status-icon-circle bg-success-soft text-success">
+                            <i class="las la-check-circle fa-4x"></i>
+                        </div>
+                    </div>
+                    <h5 class="fw-700 text-gray-900">Inventory Status: Optimum</h5>
+                    <p class="text-muted px-4">All core pharmacy items are above critical stock levels.</p>
+                </div>
+
+                <div id="contenedorAlertaStock" class="content-panel-premium shadow-lg rounded-5 h-100 d-none bg-white">
+                    <div class="panel-header-premium p-4 bg-danger-soft border-bottom_danger">
+                        <h5 class="fw-700 text-danger mb-0 d-flex align-items-center">
+                            <i class="las la-exclamation-triangle me-2 fa-lg"></i>
+                            Urgent Restock Required
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="p-3 bg-light-danger border-bottom border-danger-10 text-center">
+                            <span class="text-danger small fw-600"><span id="cantidadStockBajo">0</span> Products under minimum level</span>
+                        </div>
+                        <ul id="listaStockBajo" class="list-group list-group-flush stock-list-premium">
+                        </ul>
+                    </div>
+                    <div class="card-footer bg-white border-0 text-center py-3">
+                        <a href="#" class="btn btn-teal w-100 rounded-pill fw-600">Open Inventory Manager</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<style>
+    /* 1. Globales y Tipografía */
+    :root {
+        --teal-premium: #0F766E;
+        --teal-hover: #0d615b;
+        --teal-soft: #CCFBF1;
+        --gray-bg: #F4F7F6;
+        --text-dark: #1F2937;
+        --border-color: #E5E7EB;
+        --amber-premium: #B45309;
+        --amber-soft: #FEF3C7;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif !important;
+        background-color: var(--gray-bg) !important;
+        color: var(--text-dark);
+    }
+
+    .fw-600 {
+        font-weight: 600;
+    }
+
+    .fw-700 {
+        font-weight: 700;
+    }
+
+    .text-gray-900 {
+        color: #111827;
+    }
+
+    .border-bottom_light {
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+    .tracking-wider {
+        letter-spacing: 0.05em;
+    }
+
+    /* 2. Header & Top Bar */
+    .clinic-logo-icon {
+        width: 48px;
+        height: 48px;
+        background-color: var(--teal-premium);
+        color: white;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    .date-display-premium {
+        background: white;
+        padding: 0.5rem 1.25rem;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    /* 3. KPI Cards Premium */
+    .kpi-card-premium {
+        background: white;
+        border: 0;
+        border-radius: 20px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.06) !important;
+    }
+
+    .kpi-card-teal {
+        background: linear-gradient(135deg, #0F766E 0%, #0d615b 100%);
+    }
+
+    .kpi-icon-container {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .bg-teal-soft {
+        background-color: var(--teal-soft);
+    }
+
+    .text-teal {
+        color: var(--teal-premium);
+    }
+
+    .bg-amber-soft {
+        background-color: var(--amber-soft);
+    }
+
+    .text-amber {
+        color: var(--amber-premium);
+    }
+
+    .bg-white-10 {
+        background-color: rgba(255,255,255,0.1);
+    }
+
+    /* 4. Main Panel Style */
+    .content-panel-premium {
+        border: 0;
+    }
+
+    .status-icon-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .bg-success-soft {
+        background-color: rgba(40, 167, 69, 0.08);
+    }
+
+    /* 5. Tabla US Modern */
+    .table-us-modern thead th {
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+        color: #6B7280;
+        padding: 1.25rem 0.75rem;
+        border-bottom: 2px solid #F3F4F6;
+    }
+
+    .table-us-modern tbody td {
+        padding: 1rem 0.75rem;
+        border-color: #F3F4F6;
+    }
+
+    /* 6. Botones & Misceláneos */
+    .btn-teal {
+        background-color: var(--teal-premium);
+        color: white;
+    }
+
+        .btn-teal:hover {
+            background-color: var(--teal-hover);
+            color: white;
+        }
+
+    .btn-teal-outline {
+        border: 1px solid var(--teal-premium);
+        color: var(--teal-premium);
+        background: white;
+    }
+
+        .btn-teal-outline:hover {
+            background-color: var(--teal-soft);
+            color: var(--teal-premium);
+        }
+
+    .spinner-custom {
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid rgba(15, 118, 110, 0.2);
+        border-radius: 50%;
+        border-top-color: var(--teal-premium);
+        animation: spin 1s linear infinite;
+        display: inline-block;
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Stock List */
+    .bg-danger-soft {
+        background-color: rgba(220, 53, 69, 0.03);
+    }
+
+    .border-bottom_danger {
+        border-bottom: 2px solid rgba(220, 53, 69, 0.1);
+    }
+
+    .stock-list-premium .list-group-item {
+        border-color: #F9FAFB;
+        padding: 1rem 1.5rem;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        try {
+            const response = await fetch('/Admin/ObtenerEstadisticas');
+            const result = await response.json();
+
+            if (!result.success) throw new Error(result.message);
+
+            const d = result.data;
+
+            // 1. Llenado de Cards (Números con animación suave)
+            // Para el total de pacientes y médicos
+            document.getElementById("totalPacientes").textContent = d.totalPacientes;
+            document.getElementById("totalMedicos").textContent = d.totalMedicosRegistrados;
+            document.getElementById("citasHoy").textContent = d.citasHoy;
+
+            // Ingresos formateados (S/ X,XXX.XX)
+            document.getElementById("ventasMes").textContent = `S/ ${parseFloat(d.ventasMesActual).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            // 2. Llenado de Top Medicamentos (Tabla Premium)
+            const tablaBody = document.getElementById("topMedicamentosBody");
+            tablaBody.innerHTML = ""; // Limpiar spinner
+
+            if (d.topMedicamentos && d.topMedicamentos.length > 0) {
+                d.topMedicamentos.forEach(item => {
+                    // Diseño moderno de fila: Icono suave, nombre fuerte, porcentaje de venta simulado
+                    tablaBody.innerHTML += `
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-teal-soft text-teal p-3 rounded-3 me-3">
+                                        <i class="las la-pills fa-lg"></i>
+                                    </div>
+                                    <div>
+                                        <span class="fw-600 text-gray-900 d-block">${item.Nombre}</span>
+                                        <span class="text-muted small">ID: #${item.IdMedicamento || 'N/A'}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge rounded-pill bg-light text-gray-900 border px-3 py-2 fw-500">${item.TotalVendido} Units</span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="progress rounded-pill bg-light" style="height: 6px; width: 120px; display: inline-flex;">
+                                    <div class="progress-bar bg-teal" style="width: ${Math.min((item.TotalVendido / 100) * 100, 100)}%"></div>
+                                </div>
+                            </td>
+                        </tr>`;
+                });
+            } else {
+                tablaBody.innerHTML = '<tr><td colspan="3" class="text-center py-5 text-muted">No sales data recorded for this month.</td></tr>';
+            }
+
+            // 3. Manejo de Stock Bajo (Panel Crítico)
+            if (d.productosStockBajo > 0) {
+                document.getElementById("contenedorAlertaStock").classList.remove("d-none");
+                document.getElementById("stockOk").classList.add("d-none");
+                document.getElementById("cantidadStockBajo").textContent = d.productosStockBajo;
+
+                const listaStock = document.getElementById("listaStockBajo");
+                listaStock.innerHTML = ""; // Limpiar spinner
+
+                d.stockBajoList.forEach(p => {
+                    // Item de lista: Nombre strong, stock en rojo tenue
+                    listaStock.innerHTML += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                            <div>
+                                <span class="fw-500 text-gray-900">${p.Nombre}</span>
+                                <span class="text-muted small d-block">Min. Level required: 10</span>
+                            </div>
+                            <span class="badge bg-danger-soft text-danger rounded-pill px-3 py-2">${p.Stock} Units left</span>
+                        </li>`;
+                });
+            }
+            // Si productosStockBajo es 0, el panel "stockOk" permanece visible por defecto
+
+        } catch (error) {
+            console.error("Dashboard Error:", error);
+            // Podrías renderizar un mensaje de error visual aquí en el panel
+            document.getElementById("topMedicamentosBody").innerHTML = '<tr><td colspan="3" class="text-center py-5 text-danger">Failed to load dashboard statistics. Check console.</td></tr>';
+        }
+    });
+</script>

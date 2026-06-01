@@ -1,0 +1,126 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+/* Efecto para elevar las tarjetas */
+.hover-up {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+    .hover-up:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+    }
+
+/* Ajuste para el carrusel en móviles */
+.carousel-item img {
+    object-position: center;
+}
+}
++ /* Animación suave para las tarjetas */
+.card-hover {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.grayscale {
+    filter: grayscale(100%);
+}
+
+.bg-success-subtle {
+    background-color: #d1e7dd;
+}
+
+.bg-primary-subtle {
+    background-color: #cfe2ff;
+}
+
+.tracking-wider {
+    letter-spacing: 0.05rem;
+}
+
+.btn-light:hover {
+    background-color: #e2e6ea;
+}
+
+/* Efecto hover suave para las filas */
+.table-hover tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.02);
+    transition: background-color 0.3s ease;
+}
+
+:root {
+    /* Nueva Paleta de Grises Avanzada */
+    --nav-gray: #2d3436; /* Gris Oxford */
+    --body-bg: #f1f2f6;
+    --accent-blue: #0984e3;
+    --glass-white: rgba(255, 255, 255, 0.05);
+    --transition: all 0.3s ease;
+}
+
+/* NAVBAR GRIS PROFESIONAL */
+.navbar-custom {
+    background-color: var(--nav-gray) !important;
+    background-image: linear-gradient(180deg, #353b48 0%, #2f3640 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Efecto para los enlaces en fondo gris */
+.nav-link-custom {
+    color: rgba(255, 255, 255, 0.8) !important;
+    padding: 0.6rem 1.2rem !important;
+    border-radius: 8px;
+    margin: 0 2px;
+}
+
+    .nav-link-custom:hover {
+        color: #fff !important;
+        background: var(--glass-white);
+        transform: translateY(-1px);
+    }
+
+/* Botones destacados sobre gris */
+.btn-glass-nav {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #fff !important;
+}
+
+    .btn-glass-nav:hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-color: var(--accent-blue) !important;
+    }
+
+/* Icono del Logo en Gris */
+.brand-icon-wrapper {
+    background: #f1f2f6; /* Fondo claro para que resalte el icono azul */
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
