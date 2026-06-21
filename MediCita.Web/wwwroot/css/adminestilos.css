@@ -1,0 +1,163 @@
+﻿/* --- Paleta y Variables --- */
+:root {
+    --teal: #14b8a6;
+    --teal-soft: #ccfbf1;
+    --amber: #f59e0b;
+    --amber-soft: #fef3c7;
+    --gray-900: #0f172a;
+    --gray-muted: #64748b;
+    --danger: #e11d48;
+    --danger-soft: #ffe4e6;
+    --radius-lg: 24px;
+}
+
+/* --- Header & Layout --- */
+.clinic-logo-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--teal);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 1.2rem;
+}
+
+.date-display-premium {
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gray-muted);
+    display: inline-flex;
+    align-items: center;
+}
+
+/* --- KPI Cards --- */
+.kpi-card-premium {
+    border: none;
+    border-radius: var(--radius-lg);
+    transition: var(--transition);
+    background: white;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important;
+}
+
+.kpi-icon-container {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+}
+
+.kpi-card-teal {
+    background: var(--teal) !important;
+}
+
+.bg-teal-soft {
+    background: var(--teal-soft);
+}
+
+.bg-amber-soft {
+    background: var(--amber-soft);
+}
+
+.text-teal {
+    color: var(--teal);
+}
+
+.text-amber {
+    color: var(--amber);
+}
+
+/* --- Tablas y Paneles --- */
+.content-panel-premium {
+    border: 1px solid #f1f5f9;
+}
+
+.table-us-modern th {
+    color: var(--gray-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.spinner-custom {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e2e8f0;
+    border-top: 2px solid var(--teal);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- Alertas de Stock --- */
+.status-icon-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    margin: 0 auto;
+}
+
+.bg-danger-soft {
+    background: var(--danger-soft);
+}
+
+.border-bottom_danger {
+    border-bottom: 1px solid #fda4af;
+}
+
+.stock-list-premium .list-group-item {
+    border: none;
+    padding: 1rem;
+}
+
+/* --- Utilidades --- */
+.fw-700 {
+    font-weight: 700;
+}
+
+.fw-600 {
+    font-weight: 600;
+}
+
+.btn-teal-outline {
+    border: 2px solid var(--teal);
+    color: var(--teal);
+}
+
+    .btn-teal-outline:hover {
+        background: var(--teal);
+        color: white;
+    }
+
+.btn-teal {
+    background: var(--teal);
+    color: white;
+}
+
+    .btn-teal:hover {
+        background: #0d9488;
+        color: white;
+    }

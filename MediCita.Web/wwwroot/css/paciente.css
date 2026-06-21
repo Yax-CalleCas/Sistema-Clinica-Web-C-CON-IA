@@ -1,0 +1,78 @@
+﻿/* --- Variables de Diseño --- */
+:root {
+    --primary-gradient: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --card-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.container {
+    max-width: 1100px;
+}
+
+/* Tarjetas Premium */
+.card {
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 20px !important;
+    transition: all 0.3s ease;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+    .card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--card-hover) !important;
+    }
+
+.card-body {
+    padding: 2rem !important;
+}
+
+/* Iconos */
+.card i {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.card:hover i {
+    transform: scale(1.1);
+}
+
+/* Tipografía */
+.card-title {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+}
+
+.card-text {
+    font-size: 1.8rem !important;
+    font-weight: 800;
+    color: #1e293b;
+    margin-top: 0.5rem;
+}
+
+/* Botones */
+.btn {
+    padding: 0.6rem 1.5rem !important;
+    font-weight: 600;
+    border: none;
+    transition: 0.3s;
+}
+
+.btn-primary {
+    background: var(--primary-gradient);
+}
+
+.btn:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+
+/* Ajuste de seccion de bienvenida */
+.lead {
+    font-weight: 500;
+    color: #475569 !important;
+}
