@@ -1,0 +1,1616 @@
+use master
+
+-- Reinicio completo sistema
+IF DB_ID('BD_ClinPiura') IS NOT NULL
+BEGIN
+    ALTER DATABASE BD_ClinPiura SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE BD_ClinPiura;
+END
+GO
+
+-- Crea base MediCita
+CREATE DATABASE BD_ClinPiura;
+GO
+
+-- Selecciona base activa
+USE BD_ClinPiura;
+GO
+
+
+-- Define roles del sistema
+CREATE TABLE tb_Roles (
+    IdRol INT PRIMARY KEY IDENTITY(1,1),
+    NombreRol VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Almacena usuarios registrados
+CREATE TABLE tb_Usuarios (
+    IdUsuario INT IDENTITY(1,1) PRIMARY KEY,
+    NombreCompleto NVARCHAR(100) NOT NULL,
+    DNI VARCHAR(15),                                -- Identificación personal
+    Correo NVARCHAR(100) NOT NULL UNIQUE,
+    Clave NVARCHAR(200) NOT NULL,
+    IdRol INT NOT NULL,
+    Activo BIT NOT NULL DEFAULT 1,
+    FechaRegistro DATETIME NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT FK_Usuarios_Rol FOREIGN KEY (IdRol) REFERENCES tb_Roles(IdRol)
+);
+
+-- Catálogo especialidades médicas
+CREATE TABLE tb_Especialidades (
+    IdEspecialidad INT PRIMARY KEY IDENTITY(1,1),
+    NombreEspec VARCHAR(80) NOT NULL,
+    Descripcion VARCHAR(300)
+);
+
+
+-- Información profesionales médicos
+CREATE TABLE tb_Medicos (
+    IdMedico INT PRIMARY KEY IDENTITY(1,1),
+    IdUsuario INT UNIQUE NOT NULL,
+    IdEspecialidad INT,
+    CMP VARCHAR(20) NOT NULL,
+    RNE VARCHAR(20) NULL,                            -- Registro especialidad
+    Telefono VARCHAR(15),
+    PrecioConsulta DECIMAL(10,2) NOT NULL DEFAULT 80.00,
+    DuracionMinutos INT NOT NULL DEFAULT 30,
+    TipoServicio VARCHAR(100),
+    HorarioAtencionInicio TIME,
+    HorarioAtencionFin TIME,
+    CONSTRAINT FK_Medicos_Usuario FOREIGN KEY (IdUsuario) REFERENCES tb_Usuarios(IdUsuario),
+    CONSTRAINT FK_Medicos_Especialidad FOREIGN KEY (IdEspecialidad) REFERENCES tb_Especialidades(IdEspecialidad)
+);
+
+ALTER TABLE tb_Medicos
+ADD ImagenUrl NVARCHAR(500) NULL;
+
+-- Registro citas médicas
+CREATE TABLE tb_Citas (
+    IdCita INT PRIMARY KEY IDENTITY(1,1),
+    IdPaciente INT NOT NULL,
+    IdMedico INT NOT NULL,
+    FechaCita DATETIME NOT NULL,
+    HoraInicio TIME NULL,                             -- Hora inicio cita
+    HoraFin TIME NULL,                                -- Hora fin cita
+    MontoPagar DECIMAL(10,2) NULL,                    -- Costo consulta
+    Estado CHAR(1) DEFAULT 'P' CHECK (Estado IN ('P','A','C')),
+    CONSTRAINT FK_Citas_Paciente FOREIGN KEY (IdPaciente) REFERENCES tb_Usuarios(IdUsuario),
+    CONSTRAINT FK_Citas_Medico FOREIGN KEY (IdMedico) REFERENCES tb_Medicos(IdMedico)
+);
+
+-- Horarios asignados médicos
+CREATE TABLE tb_HorariosMedico (
+    IdHorario INT PRIMARY KEY IDENTITY(1,1),
+    IdMedico INT NOT NULL,
+    HoraInicio TIME NOT NULL,
+    HoraFin TIME NOT NULL,
+    Disponible BIT NOT NULL DEFAULT 1,
+    CONSTRAINT FK_Horarios_Medico FOREIGN KEY (IdMedico) REFERENCES tb_Medicos(IdMedico)
+);
+GO
+
+-- Fecha específica del horario
+ALTER TABLE tb_HorariosMedico
+ADD Fecha DATE NULL;
+
+
+-- Notas asociadas citas
+CREATE TABLE tb_CitaNotas (
+    IdNota INT IDENTITY(1,1) PRIMARY KEY,
+    IdCita INT NOT NULL,
+    Nota NVARCHAR(500),
+    FechaNota DATETIME DEFAULT GETDATE(),
+    CONSTRAINT FK_CitaNotas_Citas FOREIGN KEY (IdCita) REFERENCES tb_Citas(IdCita)
+);
+
+-- Inventario medicamentos farmacia
+CREATE TABLE tb_Medicamentos (
+    IdMedicamento INT PRIMARY KEY IDENTITY(1,1),
+    Nombre VARCHAR(150) NOT NULL,
+    Laboratorio VARCHAR(100),
+    Precio DECIMAL(10,2) NOT NULL CHECK (Precio >= 0),
+    Stock INT NOT NULL CHECK (Stock >= 0) DEFAULT 0,
+    ImagenUrl NVARCHAR(500),
+    Descripcion NVARCHAR(1000),
+    Promocion NVARCHAR(300),
+    Categoria NVARCHAR(100)
+);
+
+-- Registro ventas farmacia
+CREATE TABLE tb_Ventas (
+    IdVenta INT PRIMARY KEY IDENTITY(1,1),
+    IdPaciente INT NOT NULL,
+    FechaVenta DATETIME DEFAULT GETDATE(),
+    SubTotal DECIMAL(12,2) NOT NULL,
+    IGV DECIMAL(12,2) NOT NULL,
+    TotalFinal DECIMAL(12,2) NOT NULL,
+    MetodoPago VARCHAR(30) NOT NULL DEFAULT 'EFECTIVO', -- Método pago
+    CONSTRAINT FK_Ventas_Paciente FOREIGN KEY (IdPaciente) REFERENCES tb_Usuarios(IdUsuario)
+);
+
+-- Detalle productos vendidos
+CREATE TABLE tb_DetalleVenta (
+    IdDetalle INT PRIMARY KEY IDENTITY(1,1),
+    IdVenta INT NOT NULL,
+    IdMedicamento INT NOT NULL,
+    Cantidad INT NOT NULL CHECK (Cantidad > 0),
+    PrecioUnitario DECIMAL(10,2) NOT NULL,
+    SubTotal DECIMAL(10,2) NOT NULL,
+    NombreMedicamento NVARCHAR(150),
+    ImagenUrl NVARCHAR(500),
+    Promocion NVARCHAR(300),
+    CONSTRAINT FK_DetalleVenta_Venta FOREIGN KEY (IdVenta) REFERENCES tb_Ventas(IdVenta) ON DELETE CASCADE,
+    CONSTRAINT FK_DetalleVenta_Medicamento FOREIGN KEY (IdMedicamento) REFERENCES tb_Medicamentos(IdMedicamento)
+);
+
+go
+
+-- Carrito compras temporal guarda los productos selecionas por ID DE CLIENTE
+CREATE  TABLE  tb_CarritoTemporal (
+    IdCarrito INT PRIMARY KEY IDENTITY(1,1),
+    IdUsuario INT NOT NULL,
+    IdMedicamento INT NOT NULL,
+    Cantidad INT NOT NULL DEFAULT 1,
+    FechaAgregado DATETIME DEFAULT GETDATE(),
+    CONSTRAINT FK_Carrito_Usuario FOREIGN KEY (IdUsuario) REFERENCES tb_Usuarios(IdUsuario),
+    CONSTRAINT FK_Carrito_Medicamento FOREIGN KEY (IdMedicamento) REFERENCES tb_Medicamentos(IdMedicamento)
+);
+
+go
+-- Plantilla horarios médicos
+CREATE TABLE tb_HorariosPlantilla (
+    IdHorarioPlantilla INT IDENTITY(1,1) PRIMARY KEY,
+    HoraInicio TIME NOT NULL,
+    HoraFin TIME NOT NULL
+);
+GO
+
+
+
+
+CREATE TABLE tb_ChatHistorial (
+    IdChat INT PRIMARY KEY IDENTITY(1,1),
+    IdUsuario INT NULL,
+    MensajeUsuario NVARCHAR(MAX) NOT NULL,
+    RespuestaBot NVARCHAR(MAX) NOT NULL,
+    FechaRegistro DATETIME NOT NULL DEFAULT GETDATE(),
+    SessionId VARCHAR(100) NULL,
+    CONSTRAINT FK_ChatHistorial_Usuario
+        FOREIGN KEY (IdUsuario)
+        REFERENCES tb_Usuarios(IdUsuario)
+);
+GO
+
+
+
+CREATE OR ALTER PROCEDURE sp_Chatbot_ObtenerContexto
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- =====================================================
+    -- MEDICOS PUBLICOS
+    -- SOLO INFORMACION SEGURA PARA EL CHATBOT
+    -- =====================================================
+    SELECT 
+        m.IdMedico,
+        u.NombreCompleto,
+        e.NombreEspec,
+        m.PrecioConsulta,
+        m.TipoServicio,
+        CONVERT(VARCHAR, m.HorarioAtencionInicio, 108) 
+            AS HoraInicio,
+        CONVERT(VARCHAR, m.HorarioAtencionFin, 108) 
+            AS HoraFin,
+        ISNULL(
+            m.ImagenUrl,
+            '/img/default-doctor.png'
+        ) AS Imagen
+    FROM tb_Medicos m
+    INNER JOIN tb_Usuarios u
+        ON m.IdUsuario = u.IdUsuario
+    INNER JOIN tb_Especialidades e
+        ON m.IdEspecialidad = e.IdEspecialidad
+    WHERE u.Activo = 1;
+
+    -- =====================================================
+    -- MEDICAMENTOS PUBLICOS
+    -- =====================================================
+    SELECT
+        IdMedicamento,
+        Nombre,
+        Laboratorio,
+        Precio,
+        Stock,
+        Categoria,
+        ISNULL(Promocion, '') AS Promocion,
+        ISNULL(
+            ImagenUrl,
+            '/img/default-pill.png'
+        ) AS Imagen
+    FROM tb_Medicamentos
+    WHERE Stock > 0;
+
+    -- =====================================================
+    -- HORARIOS DISPONIBLES
+    -- =====================================================
+    SELECT TOP 50
+        hm.IdHorario,
+        u.NombreCompleto AS Medico,
+        hm.Fecha,
+        CONVERT(VARCHAR, hm.HoraInicio, 108)
+            AS HoraInicio,
+        CONVERT(VARCHAR, hm.HoraFin, 108)
+            AS HoraFin
+    FROM tb_HorariosMedico hm
+    INNER JOIN tb_Medicos m
+        ON hm.IdMedico = m.IdMedico
+    INNER JOIN tb_Usuarios u
+        ON m.IdUsuario = u.IdUsuario
+    WHERE hm.Disponible = 1
+    ORDER BY hm.Fecha, hm.HoraInicio;
+
+END
+GO
+
+
+CREATE OR ALTER PROCEDURE sp_Chatbot_GuardarHistorial
+(
+    @IdUsuario INT = NULL,
+    @MensajeUsuario NVARCHAR(MAX),
+    @RespuestaBot NVARCHAR(MAX),
+    @SessionId VARCHAR(100)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO tb_ChatHistorial
+    (
+        IdUsuario,
+        MensajeUsuario,
+        RespuestaBot,
+        FechaRegistro,
+        SessionId
+    )
+    VALUES
+    (
+        @IdUsuario,
+        @MensajeUsuario,
+        @RespuestaBot,
+        GETDATE(),
+        @SessionId
+    );
+END
+GO
+
+
+
+
+-- Inserta roles base
+INSERT INTO tb_Roles (NombreRol) VALUES
+('Administrador'),
+('Medico'),
+('Paciente');
+GO
+
+-- Inserta especialidades ejemplo
+INSERT INTO tb_Especialidades (NombreEspec, Descripcion)
+VALUES
+    ('Medicina General', 'Atención primaria y consultas generales'),
+    ('Cardiología', 'Enfermedades del corazón'),
+    ('Pediatría', 'Atención a niños y adolescentes'),
+    ('Dermatología', 'Enfermedades de la piel');
+GO
+
+-- Inserta medicamentos iniciales
+INSERT INTO tb_Medicamentos (Nombre, Laboratorio, Precio, Stock, ImagenUrl, Descripcion, Promocion, Categoria)
+VALUES
+    ('Paracetamol 500mg', 'Genfar', 1.50, 100, 'https://www.hogarysalud.com.pe/wp-content/uploads/2024/10/81621-c1.webp', 'Analgésico y antipirético', '10%', 'Analgesicos'),
+    ('Ibuprofeno 400mg', 'Bayer', 2.80, 9, 'https://bysprodstorage.blob.core.windows.net/images/67221.png', 'Antiinflamatorio y analgésico', '10%', 'Analgesicos'),
+    ('Amoxicilina 500mg', 'Genfar', 3.50, 80, 'https://bysprodstorage.blob.core.windows.net/images/61583.png', 'Antibiótico de amplio espectro', '', 'Antibioticos'),
+    ('Panadol Antigripal', 'GSK', 5.00, 200, 'https://goo.su/z1Hfi', 'Alivia síntomas de gripe y resfriado', '20%', 'Antigripales'),
+    ('Vick Vaporub', 'P&G', 12.50, 30, 'https://www.hogarysalud.com.pe/wp-content/uploads/2024/10/00198401-1.jpg', 'Pomada para alivio respiratorio', '', 'Antigripales');
+
+go
+
+
+-- Inserta horarios estándar
+INSERT INTO tb_HorariosPlantilla (HoraInicio, HoraFin)
+SELECT HoraInicio, HoraFin
+FROM (
+    SELECT CAST('08:00' AS TIME) AS HoraInicio, CAST('08:40' AS TIME) AS HoraFin UNION ALL
+    SELECT '08:40','09:20' UNION ALL
+    SELECT '09:20','10:00' UNION ALL
+    SELECT '10:00','10:40' UNION ALL
+    SELECT '10:40','11:20' UNION ALL
+    SELECT '11:20','12:00' UNION ALL
+    SELECT '13:00','13:40' UNION ALL
+    SELECT '13:40','14:20' UNION ALL
+    SELECT '14:20','15:00' UNION ALL
+    SELECT '15:00','15:40' UNION ALL
+    SELECT '15:40','16:20' UNION ALL
+    SELECT '16:20','17:00'
+) AS Horarios;
+go
+
+
+
+CREATE OR ALTER PROCEDURE usp_ValidarDatosMedico
+    @DNI VARCHAR(20),
+    @Correo VARCHAR(100),
+    @CMP VARCHAR(20),
+    @IdMedico INT = NULL -- Opcional: Para excluir al propio médico en caso de edición
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- 1. Validar Correo (en la tabla de Usuarios)
+    IF EXISTS (
+        SELECT 1 FROM tb_Usuarios 
+        WHERE Correo = @Correo 
+        AND (@IdMedico IS NULL OR IdUsuario <> (SELECT IdUsuario FROM tb_Medicos WHERE IdMedico = @IdMedico))
+    )
+    BEGIN
+        SELECT 'El correo electrónico ya está registrado por otro usuario.' AS Mensaje;
+        RETURN;
+    END
+
+    -- 2. Validar DNI (en la tabla de Usuarios)
+    IF EXISTS (
+        SELECT 1 FROM tb_Usuarios
+        WHERE DNI = @DNI 
+        AND (@IdMedico IS NULL OR IdUsuario <> (SELECT IdUsuario FROM tb_Medicos WHERE IdMedico = @IdMedico))
+    )
+    BEGIN
+        SELECT 'El DNI ya pertenece a otro usuario registrado.' AS Mensaje;
+        RETURN;
+    END
+
+    -- 3. Validar CMP (en la tabla de Médicos)
+    IF EXISTS (
+        SELECT 1 FROM tb_Medicos
+        WHERE CMP = @CMP 
+        AND (@IdMedico IS NULL OR IdMedico <> @IdMedico)
+    )
+    BEGIN
+        SELECT 'El número de CMP ya se encuentra registrado.' AS Mensaje;
+        RETURN;
+    END
+
+    -- Si llega aquí, todo está bien   
+    SELECT NULL AS Mensaje;
+END
+go
+
+
+--estadisticas del panel de admin
+CREATE OR ALTER PROCEDURE usp_ObtenerEstadisticasDashboard
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE 
+        @TotalPacientes INT,
+        @TotalMedicos INT,
+        @CitasHoy INT,
+        @VentasMes DECIMAL(12,2),
+        @TopMedicamentos NVARCHAR(MAX),
+        @StockBajo INT,
+        @MedicamentosStockBajo NVARCHAR(MAX);
+
+    -- 1. Total Pacientes 
+    SELECT @TotalPacientes = COUNT(*)
+    FROM tb_Usuarios
+    WHERE IdRol = 3; 
+
+    -- 2. Total Médicos
+    SELECT @TotalMedicos = COUNT(*)
+    FROM tb_Medicos;
+
+    -- 3. Citas del día (Optimizando el filtro de fecha)
+    SELECT @CitasHoy = COUNT(*)
+    FROM tb_Citas
+    WHERE CAST(FechaCita AS DATE) = CAST(GETDATE() AS DATE);
+
+    -- 4. Ventas del mes actual
+    SELECT @VentasMes = ISNULL(SUM(TotalFinal), 0)
+    FROM tb_Ventas
+    WHERE MONTH(FechaVenta) = MONTH(GETDATE())
+      AND YEAR(FechaVenta) = YEAR(GETDATE());
+
+    -- 5. Top 5 medicamentos más vendidos (JSON)
+    SELECT @TopMedicamentos = (
+        SELECT TOP 5 
+            m.Nombre,
+            SUM(d.Cantidad) AS TotalVendido
+        FROM tb_DetalleVenta d
+        INNER JOIN tb_Medicamentos m ON m.IdMedicamento = d.IdMedicamento
+        GROUP BY m.Nombre
+        ORDER BY TotalVendido DESC
+        FOR JSON PATH
+    );
+
+    -- 6. Conteo de productos con stock bajo (Menos de 10 unidades)
+    SELECT @StockBajo = COUNT(*)
+    FROM tb_Medicamentos
+    WHERE Stock < 10;
+
+    -- 7. Lista detallada de stock bajo (JSON)
+    SELECT @MedicamentosStockBajo = (
+        SELECT 
+            Nombre,
+            Stock
+        FROM tb_Medicamentos
+        WHERE Stock < 10
+        FOR JSON PATH
+    );
+
+    -- RESULTADO FINAL
+    SELECT 
+        ISNULL(@TotalPacientes, 0) AS TotalPacientes,
+        ISNULL(@TotalMedicos, 0) AS TotalMedicosRegistrados,
+        ISNULL(@CitasHoy, 0) AS CitasHoy,
+        ISNULL(@VentasMes, 0) AS VentasMesActual,
+        ISNULL(@TopMedicamentos, '[]') AS TopMedicamentosJson,
+        ISNULL(@StockBajo, 0) AS ProductosStockBajo,
+        ISNULL(@MedicamentosStockBajo, '[]') AS MedicamentosStockBajoJson;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE usp_ValidarUsuario
+    @Correo NVARCHAR(100),
+    @Clave NVARCHAR(200)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        u.IdUsuario,
+        u.NombreCompleto,
+        u.Correo,
+        u.IdRol,
+        r.NombreRol,
+        m.IdMedico   
+    FROM tb_Usuarios u
+    INNER JOIN tb_Roles r ON u.IdRol = r.IdRol
+    LEFT JOIN tb_Medicos m ON m.IdUsuario = u.IdUsuario  
+    WHERE 
+        u.Correo = @Correo
+        AND u.Clave = @Clave
+        AND u.Activo = 1;
+END
+GO
+
+
+
+-- REGISTRAR USUARIO NORMAL (PACIENTE DESDE WEB) solo admite pacientes 
+
+CREATE OR ALTER PROCEDURE usp_RegistrarUsuario
+(
+    @NombreCompleto NVARCHAR(100),
+    @DNI VARCHAR(15) = NULL,
+    @Correo NVARCHAR(100),
+    @Clave NVARCHAR(200),
+    @IdRol INT = 3
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Validar correo duplicado
+    IF EXISTS (SELECT 1 FROM tb_Usuarios WHERE Correo = @Correo)
+    BEGIN
+        SELECT -1 AS IdGenerado; -- Correo duplicado
+        RETURN;
+    END
+
+    -- Validar DNI duplicado (solo si no es NULL)
+    IF @DNI IS NOT NULL
+       AND EXISTS (SELECT 1 FROM tb_Usuarios WHERE DNI = @DNI)
+    BEGIN
+        SELECT -2 AS IdGenerado; -- DNI duplicado
+        RETURN;
+    END
+
+    INSERT INTO tb_Usuarios (NombreCompleto, DNI, Correo, Clave, IdRol)
+    VALUES (@NombreCompleto, @DNI, @Correo, @Clave, @IdRol);
+
+    SELECT SCOPE_IDENTITY() AS IdGenerado;
+END
+GO
+
+
+--Porcedure para poder crear el admindesde el .net core con contraseña encriptada 
+CREATE OR ALTER PROCEDURE usp_CrearUsuarioCompleto
+(
+    @NombreCompleto NVARCHAR(100),
+    @DNI VARCHAR(15) = NULL,
+    @Correo NVARCHAR(100),
+    @Clave NVARCHAR(200),
+    @IdRol INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Evitar duplicado
+    IF EXISTS (SELECT 1 FROM tb_Usuarios WHERE Correo = @Correo)
+    BEGIN
+        SELECT -1 AS IdUsuario;  
+        RETURN;
+    END
+
+    INSERT INTO tb_Usuarios (NombreCompleto, DNI, Correo, Clave, IdRol)
+    VALUES (@NombreCompleto, @DNI, @Correo, @Clave, @IdRol);
+
+    SELECT SCOPE_IDENTITY() AS IdUsuario;
+END
+GO
+---cambiar la clave 
+CREATE or alter  PROCEDURE usp_AdminCambiarClaveUsuario
+    @IdUsuario INT,
+    @NuevaClave NVARCHAR(200)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE tb_Usuarios
+    SET Clave = @NuevaClave
+    WHERE IdUsuario = @IdUsuario;
+
+    -- Retorna 1 si se actualizó, 0 si no
+    SELECT @@ROWCOUNT;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_ListarUsuarios
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        u.IdUsuario,
+        u.NombreCompleto,
+        u.DNI,
+        u.Correo,
+        u.Activo,
+        u.FechaRegistro,
+        r.NombreRol
+    FROM tb_Usuarios u
+    INNER JOIN tb_Roles r ON u.IdRol = r.IdRol
+    ORDER BY u.NombreCompleto;
+END;
+GO
+
+--procedures para crear medicos 
+
+CREATE OR ALTER PROCEDURE dbo.usp_ListarMedicos
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+
+    SELECT 
+        m.IdMedico,
+        u.IdUsuario,
+        u.NombreCompleto,
+        u.DNI,
+        u.Correo,
+        e.NombreEspec AS Especialidad,
+        m.CMP,
+        m.RNE,
+        m.Telefono,
+        m.PrecioConsulta,
+        m.DuracionMinutos,
+        m.TipoServicio,
+        u.Activo
+    FROM tb_Medicos m
+    INNER JOIN tb_Usuarios u ON m.IdUsuario = u.IdUsuario
+    LEFT JOIN tb_Especialidades e ON m.IdEspecialidad = e.IdEspecialidad
+    ORDER BY u.NombreCompleto;
+END;
+GO
+
+
+
+CREATE OR ALTER PROCEDURE usp_AdminCrearMedico
+(
+    @NombreCompleto NVARCHAR(100),
+    @DNI VARCHAR(15) = NULL,
+    @Correo NVARCHAR(100),
+    @Clave NVARCHAR(200),
+    @IdEspecialidad INT,
+    @CMP VARCHAR(20),
+    @RNE VARCHAR(20) = NULL,
+    @Telefono VARCHAR(15) = NULL,
+    @PrecioConsulta DECIMAL(10,2) = 80,
+    @DuracionMinutos INT = 40,
+    @TipoServicio VARCHAR(100) = NULL,
+    @ImagenUrl NVARCHAR(500) = NULL,   
+    @Activo BIT = 1
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        BEGIN TRAN;
+
+        -- Validar correo duplicado
+        IF EXISTS (SELECT 1 FROM tb_Usuarios WHERE Correo = @Correo)
+        BEGIN
+            SELECT -1 AS IdGenerado;
+            ROLLBACK;
+            RETURN;
+        END
+
+        -- Crear usuario
+        INSERT INTO tb_Usuarios (NombreCompleto, DNI, Correo, Clave, IdRol, Activo)
+        VALUES (@NombreCompleto, @DNI, @Correo, @Clave, 2, @Activo);
+
+        DECLARE @IdUsuario INT = SCOPE_IDENTITY();
+
+        -- Crear médico
+        INSERT INTO tb_Medicos
+        (
+            IdUsuario, IdEspecialidad, CMP, RNE, Telefono,
+            PrecioConsulta, DuracionMinutos, TipoServicio,
+            HorarioAtencionInicio, HorarioAtencionFin,
+            ImagenUrl
+        )
+        VALUES
+        (
+            @IdUsuario, @IdEspecialidad, @CMP, @RNE, @Telefono,
+            @PrecioConsulta, @DuracionMinutos, @TipoServicio,
+            '08:00', '17:00',
+            @ImagenUrl
+        );
+
+        DECLARE @IdMedico INT = SCOPE_IDENTITY();
+
+        -- Generar horarios (7 días)
+        DECLARE @i INT = 0;
+        DECLARE @FechaInicio DATE = CAST(GETDATE() AS DATE);
+
+        WHILE @i < 7
+        BEGIN
+            INSERT INTO tb_HorariosMedico (IdMedico, Fecha, HoraInicio, HoraFin, Disponible)
+            SELECT
+                @IdMedico,
+                DATEADD(DAY, @i, @FechaInicio),
+                HoraInicio,
+                HoraFin,
+                1
+            FROM tb_HorariosPlantilla;
+
+            SET @i += 1;
+        END
+
+        COMMIT;
+        SELECT @IdUsuario AS IdGenerado;
+
+    END TRY
+    BEGIN CATCH
+        ROLLBACK;
+        SELECT -2 AS ErrorCode;
+    END CATCH
+END;
+GO
+
+
+CREATE OR ALTER PROCEDURE usp_AdminEditarMedico
+(
+    @IdMedico INT,
+    @NombreCompleto NVARCHAR(100),
+    @DNI VARCHAR(15) = NULL,
+    @Correo NVARCHAR(100),
+    @IdEspecialidad INT,
+    @CMP VARCHAR(20),
+    @RNE VARCHAR(20) = NULL,
+    @Telefono VARCHAR(15) = NULL,
+    @PrecioConsulta DECIMAL(10,2),
+    @DuracionMinutos INT,
+    @TipoServicio NVARCHAR(100),
+    @ImagenUrl NVARCHAR(500),   
+    @Activo BIT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        BEGIN TRAN;
+
+        DECLARE @IdUsuario INT;
+
+        SELECT @IdUsuario = IdUsuario
+        FROM tb_Medicos
+        WHERE IdMedico = @IdMedico;
+
+        -- Validar correo duplicado
+        IF EXISTS (
+            SELECT 1 FROM tb_Usuarios
+            WHERE Correo = @Correo AND IdUsuario <> @IdUsuario
+        )
+        BEGIN
+            SELECT -1 AS ResultCode;
+            ROLLBACK;
+            RETURN;
+        END
+
+        -- Actualizar usuario
+        UPDATE tb_Usuarios
+        SET NombreCompleto = @NombreCompleto,
+            DNI = @DNI,
+            Correo = @Correo,
+            Activo = @Activo
+        WHERE IdUsuario = @IdUsuario;
+
+        -- Actualizar médico
+        UPDATE tb_Medicos
+        SET IdEspecialidad = @IdEspecialidad,
+            CMP = @CMP,
+            RNE = @RNE,
+            Telefono = @Telefono,
+            PrecioConsulta = @PrecioConsulta,
+            DuracionMinutos = @DuracionMinutos,
+            TipoServicio = @TipoServicio,
+            ImagenUrl = @ImagenUrl
+        WHERE IdMedico = @IdMedico;
+
+        COMMIT;
+        SELECT 1 AS ResultCode;
+
+    END TRY
+    BEGIN CATCH
+        ROLLBACK;
+        SELECT -2 AS ResultCode;
+    END CATCH
+END;
+GO
+
+
+
+CREATE OR ALTER PROCEDURE usp_ObtenerMedicoPorId
+    @IdMedico INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP 1
+        m.IdMedico,
+        u.NombreCompleto,
+        u.DNI,
+        u.Correo,
+        m.IdEspecialidad,
+        m.CMP,
+        m.RNE,
+        m.Telefono,
+        m.PrecioConsulta,
+        m.DuracionMinutos,
+        m.TipoServicio,
+        m.ImagenUrl,       
+        u.Activo
+    FROM tb_Medicos m
+    INNER JOIN tb_Usuarios u
+        ON m.IdUsuario = u.IdUsuario
+    WHERE m.IdMedico = @IdMedico;
+END;
+GO
+
+--admin puede crear pacientes 
+CREATE OR ALTER PROCEDURE usp_AdminCrearPaciente
+(
+    @NombreCompleto NVARCHAR(100),
+    @DNI VARCHAR(15) = NULL,
+    @Correo NVARCHAR(100),
+    @Clave NVARCHAR(200),
+    @Activo BIT = 1
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (SELECT 1 FROM tb_Usuarios WHERE Correo = @Correo)
+    BEGIN
+        SELECT -1 AS IdGenerado;
+        RETURN;
+    END
+
+    INSERT INTO tb_Usuarios (NombreCompleto, DNI, Correo, Clave, IdRol, Activo)
+    VALUES (@NombreCompleto, @DNI, @Correo, @Clave, 3, @Activo); -- Rol Paciente
+
+    SELECT SCOPE_IDENTITY() AS IdGenerado;
+END
+GO
+
+--Listar especilidades disponibles 
+
+
+CREATE OR ALTER PROCEDURE usp_ListarEspecialidades
+AS
+BEGIN
+    SELECT 
+        IdEspecialidad,
+        NombreEspec
+    FROM tb_Especialidades
+    ORDER BY NombreEspec;
+END;
+GO
+
+-- PROCEDIMIENTO: Crear un Médico desde Admin
+
+--el admin puede editar pacientes 
+CREATE OR ALTER PROCEDURE usp_AdminEditarUsuario
+(
+    @IdUsuario INT,
+    @NombreCompleto NVARCHAR(100),
+    @DNI VARCHAR(15),
+    @Correo NVARCHAR(100),
+    @Activo BIT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE tb_Usuarios
+    SET NombreCompleto = @NombreCompleto,
+        DNI = @DNI,
+        Correo = @Correo,
+        Activo = @Activo
+    WHERE IdUsuario = @IdUsuario;
+
+    SELECT @@ROWCOUNT AS FilasAfectadas;
+END
+GO
+
+
+
+--listar para citas+
+
+CREATE OR ALTER PROCEDURE usp_ListarMedicosDisponibles
+    @IdEspecialidad INT = NULL,
+    @Fecha DATE = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT DISTINCT
+        m.IdMedico,
+        u.NombreCompleto AS NombreMedico,
+        m.CMP,
+        e.NombreEspec,
+        m.PrecioConsulta,
+        m.TipoServicio,
+        m.ImagenUrl,           
+        h.IdHorario,
+        h.HoraInicio,
+        h.HoraFin,
+        h.Fecha
+    FROM tb_Medicos m
+    INNER JOIN tb_Usuarios u 
+        ON u.IdUsuario = m.IdUsuario
+    LEFT JOIN tb_Especialidades e 
+        ON e.IdEspecialidad = m.IdEspecialidad
+    LEFT JOIN tb_HorariosMedico h 
+        ON h.IdMedico = m.IdMedico
+    WHERE (@IdEspecialidad IS NULL OR m.IdEspecialidad = @IdEspecialidad)
+      AND (@Fecha IS NULL OR h.Fecha = @Fecha)
+      AND (h.Disponible = 1 OR h.IdHorario IS NULL)
+    ORDER BY u.NombreCompleto, h.HoraInicio;
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_ListarCitas
+(
+    @IdUsuario INT,       -- Id del paciente o médico
+    @Rol NVARCHAR(20)     -- 'Paciente' o 'Medico'
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Rol = 'Paciente'
+    BEGIN
+        SELECT c.IdCita, c.IdMedico, m.CMP, m.IdEspecialidad, e.NombreEspec,
+               c.FechaCita, c.HoraInicio, c.HoraFin, c.MontoPagar, c.Estado
+        FROM tb_Citas c
+        INNER JOIN tb_Medicos m ON c.IdMedico = m.IdMedico
+        LEFT JOIN tb_Especialidades e ON m.IdEspecialidad = e.IdEspecialidad
+        WHERE c.IdPaciente = @IdUsuario
+        ORDER BY c.FechaCita, c.HoraInicio;
+    END
+    ELSE IF @Rol = 'Medico'
+    BEGIN
+        SELECT c.IdCita, c.IdPaciente, u.NombreCompleto AS Paciente, c.FechaCita,
+               c.HoraInicio, c.HoraFin, c.MontoPagar, c.Estado
+        FROM tb_Citas c
+        INNER JOIN tb_Usuarios u ON c.IdPaciente = u.IdUsuario
+        WHERE c.IdMedico = @IdUsuario
+        ORDER BY c.FechaCita, c.HoraInicio;
+    END
+END
+GO
+
+--registro de uan cita
+CREATE or alter  PROCEDURE usp_RegistrarCitaConPago
+(
+    @IdPaciente INT,
+    @IdMedico INT,
+    @Fecha DATE,
+    @HoraInicio TIME,
+    @HoraFin TIME,
+    @Monto DECIMAL(10,2),
+    @IdTransaccion VARCHAR(100) -- se recibe pero no se guarda (por ahora)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    DECLARE @IdCita INT = 0;
+
+    BEGIN TRY
+        BEGIN TRAN;
+
+        -- 1️ Validar que el horario no esté ocupado
+        IF EXISTS (
+            SELECT 1
+            FROM tb_Citas
+            WHERE IdMedico = @IdMedico
+              AND CONVERT(DATE, FechaCita) = @Fecha
+              AND HoraInicio = @HoraInicio
+              AND HoraFin = @HoraFin
+              AND Estado <> 'C'
+        )
+        BEGIN
+            ROLLBACK;
+            SELECT -1;
+            RETURN;
+        END
+
+        -- 2️ Registrar la cita (P = Pagada/Pendiente según tu lógica)
+        INSERT INTO tb_Citas
+        (
+            IdPaciente,
+            IdMedico,
+            FechaCita,
+            HoraInicio,
+            HoraFin,
+            MontoPagar,
+            Estado
+        )
+        VALUES
+        (
+            @IdPaciente,
+            @IdMedico,
+            CAST(@Fecha AS DATETIME),
+            @HoraInicio,
+            @HoraFin,
+            @Monto,
+            'P'
+        );
+
+        SET @IdCita = SCOPE_IDENTITY();
+
+        COMMIT;
+
+        -- 3️ Devolver IdCita (esto espera tu C#)
+        SELECT @IdCita;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK;
+
+        THROW;
+    END CATCH
+END;
+GO
+
+	
+CREATE OR ALTER PROCEDURE sp_AtenderCita
+(
+    @IdCita INT,
+    @Estado CHAR(1),            -- 'A'=Atendida, 'C'=Cancelada, etc.
+    @Nota NVARCHAR(500) = NULL
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        BEGIN TRAN;
+
+        IF NOT EXISTS (SELECT 1 FROM tb_Citas WHERE IdCita = @IdCita)
+        BEGIN
+            RAISERROR('Cita no encontrada', 16, 1);
+            ROLLBACK;
+            RETURN;
+        END
+
+        UPDATE tb_Citas
+        SET Estado = @Estado
+        WHERE IdCita = @IdCita;
+
+        IF(@Nota IS NOT NULL AND @Nota <> '')
+        BEGIN
+            INSERT INTO tb_CitaNotas (IdCita, Nota)
+            VALUES (@IdCita, @Nota);
+        END
+
+        COMMIT;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK;
+        RAISERROR('Error al atender la cita',16,1);
+    END CATCH
+END
+GO
+
+
+CREATE OR ALTER PROCEDURE sp_ListarHorariosDisponibles
+(
+    @IdMedico INT,
+    @Fecha DATE
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @Hoy DATE = CAST(GETDATE() AS DATE);
+    DECLARE @HoraActual TIME = CAST(GETDATE() AS TIME);
+
+    SELECT 
+        h.IdHorario,
+        h.HoraInicio,
+        h.HoraFin
+    FROM tb_HorariosMedico h
+    WHERE h.IdMedico = @IdMedico
+      AND h.Fecha = @Fecha
+      AND h.Disponible = 1
+
+      --  no mostrar horarios ya reservados
+      AND NOT EXISTS (
+            SELECT 1
+            FROM tb_Citas c
+            WHERE c.IdMedico = h.IdMedico
+              AND c.FechaCita = h.Fecha
+              AND c.HoraInicio = h.HoraInicio
+              AND c.Estado <> 'C'
+      )
+
+      --  lógica correcta de tiempo
+      AND (
+            -- FUTURO → mostrar todo
+            @Fecha > @Hoy
+
+            -- HOY → solo horas futuras
+            OR (
+                @Fecha = @Hoy
+                AND h.HoraInicio > @HoraActual
+            )
+      )
+    ORDER BY h.HoraInicio;
+END
+GO
+
+--medico puede ver detalle de sus citas 
+CREATE  or alter PROCEDURE usp_Medico_ListarCitasDetalle
+    @IdMedico INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        c.IdCita,
+        c.FechaCita,
+        c.HoraInicio,
+        c.HoraFin,
+        c.Estado,
+        c.MontoPagar,
+
+        -- Paciente
+        u.IdUsuario       AS IdPaciente,
+        u.NombreCompleto  AS Paciente,
+        u.DNI,
+        u.Correo,
+
+        -- Nota (puede no existir)
+        n.Nota,
+        n.FechaNota
+
+    FROM tb_Citas c
+    INNER JOIN tb_Usuarios u 
+        ON c.IdPaciente = u.IdUsuario
+
+    LEFT JOIN tb_CitaNotas n 
+        ON c.IdCita = n.IdCita
+
+    WHERE c.IdMedico = @IdMedico
+
+    ORDER BY c.FechaCita DESC, c.HoraInicio DESC;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE usp_Paciente_VerDetalleCita
+(
+    @IdCita INT,
+    @IdPaciente INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        c.IdCita,
+        c.FechaCita,
+        c.HoraInicio,
+        c.HoraFin,
+        c.Estado,
+        c.MontoPagar,
+
+        -- Médico
+        u.NombreCompleto      AS Medico,
+        m.CMP,
+        e.NombreEspec,
+        m.ImagenUrl,
+
+        -- Nota médica
+        n.Nota,
+        n.FechaNota
+
+    FROM tb_Citas c
+    INNER JOIN tb_Medicos m 
+        ON c.IdMedico = m.IdMedico
+    INNER JOIN tb_Usuarios u 
+        ON m.IdUsuario = u.IdUsuario
+    LEFT JOIN tb_Especialidades e 
+        ON m.IdEspecialidad = e.IdEspecialidad
+    LEFT JOIN tb_CitaNotas n 
+        ON c.IdCita = n.IdCita
+
+    WHERE c.IdCita = @IdCita
+      AND c.IdPaciente = @IdPaciente;
+END
+GO
+
+
+
+
+-- Obtener por ID: Obtiene un medicamento específico
+CREATE OR ALTER PROCEDURE usp_ObtenerMedicamento
+    @IdMedicamento INT 
+AS 
+BEGIN 
+    SELECT 
+        IdMedicamento, Nombre, Laboratorio, Precio, Stock,
+        ImagenUrl, Descripcion, Promocion, Categoria
+    FROM 
+        tb_Medicamentos 
+    WHERE 
+        IdMedicamento = @IdMedicamento;
+END;
+GO
+
+-- Registrar: Inserta un nuevo medicamento
+CREATE OR ALTER PROCEDURE usp_RegistrarMedicamento
+    @Nombre VARCHAR(100), 
+    @Laboratorio VARCHAR(50), 
+    @Precio DECIMAL(10,2), 
+    @Stock INT,
+    @ImagenUrl NVARCHAR(250),
+    @Descripcion NVARCHAR(500),
+    @Promocion NVARCHAR(200),
+    @Categoria NVARCHAR(100)
+AS 
+BEGIN 
+    INSERT INTO tb_Medicamentos(Nombre, Laboratorio, Precio, Stock, ImagenUrl, Descripcion, Promocion, Categoria) 
+    VALUES (@Nombre, @Laboratorio, @Precio, @Stock, @ImagenUrl, @Descripcion, @Promocion, @Categoria);
+END;
+GO
+
+-- Editar: Actualiza la información de un medicamento existente
+CREATE OR ALTER PROCEDURE usp_EditarMedicamento
+    @IdMedicamento INT, 
+    @Nombre VARCHAR(100), 
+    @Laboratorio VARCHAR(50), 
+    @Precio DECIMAL(10,2), 
+    @Stock INT,
+    @ImagenUrl NVARCHAR(250),
+    @Descripcion NVARCHAR(500),
+    @Promocion NVARCHAR(200),
+    @Categoria NVARCHAR(100)
+AS 
+BEGIN 
+    UPDATE tb_Medicamentos 
+    SET 
+        Nombre = @Nombre, 
+        Laboratorio = @Laboratorio, 
+        Precio = @Precio, 
+        Stock = @Stock,
+        ImagenUrl = @ImagenUrl,
+        Descripcion = @Descripcion,
+        Promocion = @Promocion,
+        Categoria = @Categoria
+    WHERE 
+        IdMedicamento = @IdMedicamento;
+END;
+GO
+CREATE or alter PROCEDURE dbo.usp_ListarMedicamentos
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        IdMedicamento,
+        Nombre,
+        Laboratorio,
+        Precio,
+        Stock,
+        ImagenUrl,
+        Descripcion,
+        Promocion,
+        Categoria
+    FROM tb_Medicamentos;
+END;
+GO
+
+-- Eliminar: Elimina un medicamento por su ID
+CREATE OR ALTER PROCEDURE usp_EliminarMedicamento
+    @IdMedicamento INT 
+AS 
+BEGIN 
+    DELETE FROM tb_Medicamentos 
+    WHERE IdMedicamento = @IdMedicamento;
+END;
+GO
+
+IF TYPE_ID('TVP_DetalleVenta') IS NOT NULL
+    DROP TYPE TVP_DetalleVenta;
+GO
+CREATE  TYPE TVP_DetalleVenta AS TABLE
+(
+    IdMedicamento INT,
+    Cantidad INT,
+    Precio DECIMAL(10,2),
+    Nombre NVARCHAR(150),
+    ImagenUrl NVARCHAR(250),
+    Promocion NVARCHAR(50)
+);
+GO
+
+CREATE OR ALTER PROCEDURE usp_RegistrarVentaCompleta
+    @IdUsuario INT,
+    @MetodoPago VARCHAR(30), -- Nuevo parámetro para capturar el método de pago
+    @Detalles TVP_DetalleVenta READONLY
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRAN;
+
+    DECLARE @IdVenta INT;
+
+    BEGIN TRY
+        -- 1. Insertar Cabecera (con Método de Pago)
+        INSERT INTO tb_Ventas(IdPaciente, SubTotal, IGV, TotalFinal, MetodoPago)
+        VALUES (@IdUsuario, 0, 0, 0, @MetodoPago);
+
+        SET @IdVenta = SCOPE_IDENTITY();
+
+        -- 2. Insertar detalles calculando descuentos
+        INSERT INTO tb_DetalleVenta(
+            IdVenta, IdMedicamento, Cantidad,
+            PrecioUnitario, SubTotal,
+            NombreMedicamento, ImagenUrl, Promocion
+        )
+        SELECT
+            @IdVenta,
+            d.IdMedicamento,
+            d.Cantidad,
+            d.Precio,
+            (d.Precio * d.Cantidad) *
+            (1 - 
+                CASE 
+                    WHEN d.Promocion LIKE '%\%%' ESCAPE '\' 
+                         AND ISNUMERIC(REPLACE(d.Promocion,'%','')) = 1
+                    THEN CAST(REPLACE(d.Promocion,'%','') AS DECIMAL(5,2)) / 100
+                    ELSE 0
+                END
+            ),
+            d.Nombre,
+            d.ImagenUrl,
+            ISNULL(d.Promocion,'')
+        FROM @Detalles d;
+
+        -- 3. Actualizar stock de medicamentos
+        UPDATE m
+        SET m.Stock = m.Stock - d.Cantidad
+        FROM tb_Medicamentos m
+        INNER JOIN @Detalles d ON m.IdMedicamento = d.IdMedicamento;
+
+        -- 4. Calcular y actualizar Totales en la cabecera
+        DECLARE @GranSubTotal DECIMAL(12,2);
+        SELECT @GranSubTotal = SUM(SubTotal) FROM tb_DetalleVenta WHERE IdVenta = @IdVenta;
+
+        UPDATE tb_Ventas
+        SET
+            SubTotal = @GranSubTotal,
+            IGV = @GranSubTotal * 0.18,
+            TotalFinal = @GranSubTotal * 1.18
+        WHERE IdVenta = @IdVenta;
+
+        -- 5. LIMPIAR CARRITO TEMPORAL (PERSISTENCIA)
+
+        DELETE FROM tb_CarritoTemporal 
+        WHERE IdUsuario = @IdUsuario;
+
+        COMMIT;
+
+        -- Retornar resultado de la transacción
+        SELECT 
+            v.IdVenta,
+            v.SubTotal,
+            v.IGV,
+            v.TotalFinal,
+            v.MetodoPago
+        FROM tb_Ventas v
+        WHERE v.IdVenta = @IdVenta;
+
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK;
+        THROW;
+    END CATCH
+END;
+GO
+
+create or alter procedure usp_SincronizarCarrito
+    @IdUsuario INT,
+    @IdMedicamento INT,
+    @Cantidad INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (SELECT 1 FROM tb_CarritoTemporal 
+               WHERE IdUsuario = @IdUsuario AND IdMedicamento = @IdMedicamento)
+    BEGIN
+        -- Actualizar: Si la nueva cantidad es > 0 actualiza, sino elimina
+        IF (SELECT Cantidad + @Cantidad FROM tb_CarritoTemporal 
+            WHERE IdUsuario = @IdUsuario AND IdMedicamento = @IdMedicamento) > 0
+        BEGIN
+            UPDATE tb_CarritoTemporal
+            SET Cantidad = Cantidad + @Cantidad,
+                FechaAgregado = GETDATE()
+            WHERE IdUsuario = @IdUsuario AND IdMedicamento = @IdMedicamento;
+        END
+        ELSE
+        BEGIN
+            DELETE FROM tb_CarritoTemporal 
+            WHERE IdUsuario = @IdUsuario AND IdMedicamento = @IdMedicamento;
+        END
+    END
+    ELSE
+    BEGIN
+        -- Solo insertar si la cantidad es positiva
+        IF @Cantidad > 0
+        BEGIN
+            INSERT INTO tb_CarritoTemporal (IdUsuario, IdMedicamento, Cantidad, FechaAgregado)
+            VALUES (@IdUsuario, @IdMedicamento, @Cantidad, GETDATE());
+        END
+    END
+END;
+GO
+
+CREATE OR ALTER PROCEDURE usp_ObtenerCarritoPersistente
+    @IdUsuario INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        c.IdMedicamento,
+        m.Nombre AS NombreMedicamento,
+        m.Precio AS PrecioUnitario,
+        c.Cantidad,
+        m.ImagenUrl,
+        ISNULL(m.Promocion, '') AS Promocion
+    FROM tb_CarritoTemporal c
+    INNER JOIN tb_Medicamentos m ON c.IdMedicamento = m.IdMedicamento
+    WHERE c.IdUsuario = @IdUsuario
+    ORDER BY c.FechaAgregado ASC;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE usp_ObtenerVentaDetalle
+    @IdVenta INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- 1. Retornar la Cabecera de la Venta
+    SELECT 
+        v.IdVenta,
+        v.IdPaciente AS IdUsuario,
+        v.FechaVenta,
+        v.SubTotal,
+        v.IGV,
+        v.TotalFinal AS Total,
+        v.MetodoPago
+    FROM tb_Ventas v
+    WHERE v.IdVenta = @IdVenta;
+
+    -- 2. Retornar los Detalles de la Venta
+    SELECT 
+        dv.IdMedicamento,
+        dv.NombreMedicamento,
+        dv.PrecioUnitario,
+        dv.Cantidad,
+        dv.SubTotal AS Importe,
+        dv.Promocion,
+        dv.ImagenUrl
+    FROM tb_DetalleVenta dv
+    WHERE dv.IdVenta = @IdVenta;
+END;
+GO
+-- Procedimientos para citas 
+CREATE OR ALTER PROCEDURE sp_ReporteCitasPorFecha
+(
+    @FechaInicio DATE,
+    @FechaFin DATE,
+    @Estado CHAR(1) = NULL
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        c.IdCita,
+        uPac.NombreCompleto AS Paciente,
+        uMed.NombreCompleto AS Medico,
+        m.CMP,
+        e.NombreEspec AS Especialidad,
+        c.FechaCita,
+        c.HoraInicio,
+        c.HoraFin,
+        c.MontoPagar,
+        c.Estado, 
+        CASE c.Estado
+            WHEN 'P' THEN 'Pendiente'
+            WHEN 'A' THEN 'Atendida'
+            WHEN 'C' THEN 'Cancelada'
+        END AS EstadoDescripcion,
+        n.Nota AS NotaCita,
+        CASE 
+            WHEN c.Estado = 'C' THEN n.Nota
+            ELSE NULL
+        END AS MotivoCancelacion
+    FROM tb_Citas c
+    INNER JOIN tb_Usuarios uPac ON c.IdPaciente = uPac.IdUsuario
+    INNER JOIN tb_Medicos m ON c.IdMedico = m.IdMedico
+    INNER JOIN tb_Usuarios uMed ON m.IdUsuario = uMed.IdUsuario
+    LEFT JOIN tb_Especialidades e ON m.IdEspecialidad = e.IdEspecialidad
+    OUTER APPLY (
+        SELECT TOP 1 Nota
+        FROM tb_CitaNotas n
+        WHERE n.IdCita = c.IdCita
+        ORDER BY n.FechaNota DESC
+    ) n
+    WHERE c.FechaCita >= @FechaInicio
+      AND c.FechaCita <= @FechaFin 
+      AND (@Estado IS NULL OR c.Estado = @Estado)
+    ORDER BY c.FechaCita DESC, c.HoraInicio;
+END
+go
+
+CREATE OR ALTER PROCEDURE sp_ReporteVentasPorFecha
+(
+    @FechaInicio DATE,
+    @FechaFin DATE
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        v.IdVenta,
+        u.NombreCompleto AS Paciente,
+        v.FechaVenta,
+        dv.NombreMedicamento,
+        dv.Cantidad,
+        dv.PrecioUnitario,
+        dv.SubTotal,
+        v.SubTotal AS VentaSubTotal,
+        v.IGV,
+        v.TotalFinal,
+        v.MetodoPago,
+
+        -- Extrae porcentaje desde texto tipo '10% OFF'
+        CASE
+            WHEN dv.Promocion LIKE '%[%]%'
+                THEN TRY_CAST(
+                        REPLACE(
+                            LEFT(dv.Promocion, CHARINDEX('%', dv.Promocion) - 1),
+                            '%',''
+                        ) AS INT
+                     )
+            ELSE 0
+        END AS PorcentajeDescuento
+
+    FROM tb_Ventas v
+    INNER JOIN tb_Usuarios u ON v.IdPaciente = u.IdUsuario
+    INNER JOIN tb_DetalleVenta dv ON v.IdVenta = dv.IdVenta
+    WHERE CAST(v.FechaVenta AS DATE)
+          BETWEEN @FechaInicio AND @FechaFin
+    ORDER BY v.FechaVenta DESC;
+END
+GO
+
+
+
+CREATE OR ALTER PROCEDURE sp_ReporteStockBajo
+(
+    @StockMinimo INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        IdMedicamento,
+        Nombre,
+        Categoria,
+        Laboratorio,
+        Stock,
+        Precio
+    FROM tb_Medicamentos
+    WHERE Stock <= @StockMinimo
+    ORDER BY Stock ASC;
+END
+GO
+
+
+--estadisticas para el panel del cliente 
+CREATE OR ALTER PROCEDURE sp_EstadisticasPaciente
+    @IdPaciente INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Estadísticas de citas
+    SELECT
+        COUNT(*) AS TotalCitas,
+        ISNULL(SUM(CASE WHEN Estado = 'P' THEN 1 ELSE 0 END),0) AS Pendientes,
+        ISNULL(SUM(CASE WHEN Estado = 'A' THEN 1 ELSE 0 END),0) AS Atendidas,
+        ISNULL(SUM(CASE WHEN Estado = 'C' THEN 1 ELSE 0 END),0) AS Canceladas
+    INTO #Citas
+    FROM tb_Citas
+    WHERE IdPaciente = @IdPaciente;
+
+    -- Estadísticas de compras
+    SELECT
+        ISNULL(COUNT(*),0) AS ComprasRealizadas,
+        ISNULL(SUM(TotalFinal),0) AS TotalGastado
+    INTO #Ventas
+    FROM tb_Ventas
+    WHERE IdPaciente = @IdPaciente;
+
+    -- Combinar resultados y devolver
+    SELECT
+        c.TotalCitas,
+        c.Pendientes,
+        c.Atendidas,
+        c.Canceladas,
+        v.ComprasRealizadas,
+        v.TotalGastado
+    FROM #Citas c
+    CROSS JOIN #Ventas v;
+	 
+    -- Limpiar tablas temporales
+    DROP TABLE #Citas;
+    DROP TABLE #Ventas;
+END
+GO
+
+
